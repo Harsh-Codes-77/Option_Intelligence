@@ -26,6 +26,7 @@ export interface SymbolState {
 }
 
 export interface SectorState {
+  key: string;
   name: string;
   price: number;
   changePct: number;
@@ -148,7 +149,7 @@ export const LOT_SIZES: Record<string, number> = {
   NIFTY: 75,
   BANKNIFTY: 30,
   FINNIFTY: 40,
-  MIDCPNIFTY: 75,
+  MIDCPNIFTY: 120, // Correct lot size as of 2024
 };
 
 // Sector list

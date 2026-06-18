@@ -124,6 +124,7 @@ async function runDataCycle(): Promise<void> {
     const e8 = await runInstitutionalEngine(fiiDiiData);
 
     appState.setSectors(e7.sectors.map(s => ({
+      key: s.key,
       name: s.name, price: s.price, changePct: s.changePct,
       rsRatio: s.rsRatio, rsMomentum: s.rsMomentum, relativeVolume: s.relativeVolume,
       sectorScore: s.sectorScore, rrgQuadrant: s.rrgQuadrant, breadth: s.sectorBreadth,
@@ -161,6 +162,13 @@ async function runDataCycle(): Promise<void> {
         const e5 = runVolatilityEngine(symbol, optionChainData, vix);
         const e9 = await runTechnicalEngine(symbol, spotPrice);
         const e10 = await runFuturesEngine(symbol, optionChainData);
+        
+        await setCache(`futures:${symbol}`, {
+          futuresPrice: e10.futuresPrice,
+          oi: 0,
+          volume: 0,
+        }, 120);
+
         const e11 = runScoringEngine(symbol, {
           pcrScore: e3.pcrOI,
           futuresSignal: e10.oiSignal,
@@ -232,17 +240,10 @@ async function runDataCycle(): Promise<void> {
         } catch {}
 
         // Broadcast
-        broadcaster.emit('update', {
-          symbol,
-          spotPrice,
-          vix,
-          marketBias: e11.marketBias,
-          bullishScore: e11.bullishScore,
-          regime: e12.regime,
-          pcrOI: e3.pcrOI,
-          maxPain: e4.maxPainStrike,
-          timestamp: Date.now(),
-        });
+        const fullState = appState.getSymbolState(symbol);
+        if (fullState) {
+          broadcaster.broadcast('update', { symbol, ...fullState }, symbol);
+        }
 
       } catch (err: any) {
         console.error(`[Scheduler] Error processing ${symbol}:`, err.message);

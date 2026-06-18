@@ -1,5 +1,5 @@
 import { ParsedOptionChain } from '../fetchers/optionChain';
-import { getCache } from '../config/redis';
+import { getCache, setCache } from '../config/redis';
 
 export type PCRClassification = 'EXTREMELY_BULLISH' | 'BULLISH' | 'NEUTRAL' | 'BEARISH' | 'EXTREMELY_BEARISH';
 export type PCRTrend = 'RISING' | 'FALLING' | 'STABLE';
@@ -58,12 +58,14 @@ export async function runPCREngine(symbol: string, data: ParsedOptionChain): Pro
   }
 
   const signal = determinePCRSignal(pcrOI, trend);
+  const newHistory = [pcrOI, ...pcrHistory].slice(0, 20);
+  await setCache(`pcr:history:${symbol}`, newHistory, 86400);
 
   return {
     symbol, pcrOI, pcrVolume, classification, trend, signal, atmPCR,
     totalPutOI: totalPE_OI, totalCallOI: totalCE_OI,
     totalPutVolume: totalPE_Volume, totalCallVolume: totalCE_Volume,
-    pcrHistory: [pcrOI, ...pcrHistory].slice(0, 20),
+    pcrHistory: newHistory,
     formulaBreakdown: {
       title: 'PCR Score Calculation',
       steps: [

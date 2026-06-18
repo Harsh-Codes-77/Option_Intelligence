@@ -40,7 +40,7 @@ export async function runRegimeEngine(
 
   // Rule 3: ADX (simplified from price history)
   const priceHistory = await getCache<{ close: number }[]>(`price:history:${symbol}`) || [];
-  let adx = 20; // default
+  let adx = 15; // default to weak trend, not moderate
   if (priceHistory.length >= 20) {
     const recent = priceHistory.slice(-20).map(p => p.close);
     const changes = recent.slice(1).map((c, i) => Math.abs(c - recent[i]));

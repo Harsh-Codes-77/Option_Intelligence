@@ -30,9 +30,9 @@ export async function fetchBreadthData(): Promise<BreadthData | null> {
     totalTradedValue: entry.totalTradedValue || 0,
   }));
 
-  const advancing = stocks.filter((s) => s.change > 0).length;
-  const declining = stocks.filter((s) => s.change < 0).length;
-  const unchanged = stocks.filter((s) => s.change === 0).length;
+  const advancing = stocks.filter((s) => s.change > 0 || s.lastPrice > s.previousClose).length;
+  const declining = stocks.filter((s) => s.change < 0 || s.lastPrice < s.previousClose).length;
+  const unchanged = stocks.filter((s) => s.change === 0 && s.lastPrice === s.previousClose).length;
 
   return {
     totalStocks: stocks.length,

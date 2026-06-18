@@ -1,61 +1,13 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useDashboardStore } from '../store/dashboardStore';
 
-const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3001';
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const WS_URL = import.meta.env.VITE_WS_URL || `ws://${window.location.host}/ws/`;
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 export function useWebSocket() {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const { setWsConnected, setSymbolState, addAlert, addTimelineEvent, setLastFetchTime, activeSymbol } = useDashboardStore();
-
-  const connect = useCallback(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) return;
-
-    try {
-      const ws = new WebSocket(WS_URL);
-      wsRef.current = ws;
-
-      ws.onopen = () => {
-        setWsConnected(true);
-        console.log('[WS] Connected');
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const msg = JSON.parse(event.data);
-          if (msg.type === 'ping') {
-            ws.send(JSON.stringify({ type: 'pong' }));
-            return;
-          }
-          if (msg.type === 'update' && msg.data) {
-            setLastFetchTime(msg.timestamp || Date.now());
-            if (msg.data?.symbol) {
-              setSymbolState(msg.data.symbol, msg.data);
-            }
-          }
-          if (msg.type === 'alert' && msg.data) {
-            addAlert(msg.data);
-          }
-          if (msg.type === 'timeline' && msg.data) {
-            addTimelineEvent(msg.data.symbol, msg.data);
-          }
-        } catch {}
-      };
-
-      ws.onclose = () => {
-        setWsConnected(false);
-        console.log('[WS] Disconnected, reconnecting in 3s...');
-        reconnectTimer.current = setTimeout(connect, 3000);
-      };
-
-      ws.onerror = () => {
-        ws.close();
-      };
-    } catch {
-      reconnectTimer.current = setTimeout(connect, 3000);
-    }
-  }, [setWsConnected, addAlert, addTimelineEvent, setLastFetchTime, setSymbolState]);
 
   // Initial HTTP fetch for dashboard data
   const fetchDashboard = useCallback(async (symbol: string, retries = 3) => {
@@ -80,6 +32,57 @@ export function useWebSocket() {
       }
     }
   }, [setSymbolState, setLastFetchTime]);
+
+  const connect = useCallback(() => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) return;
+
+    try {
+      const ws = new WebSocket(WS_URL);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        setWsConnected(true);
+        console.log('[WS] Connected');
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'ping') {
+            ws.send(JSON.stringify({ type: 'pong' }));
+            return;
+          }
+          if (msg.type === 'update' && msg.data?.symbol && msg.data?.engines) {
+            // Full state update from WebSocket
+            setLastFetchTime(msg.timestamp || Date.now());
+            setSymbolState(msg.data.symbol, msg.data);
+          } else if (msg.type === 'update' && msg.data?.symbol) {
+            // Summary update — trigger HTTP fetch for full state
+            setLastFetchTime(msg.timestamp || Date.now());
+            fetchDashboard(msg.data.symbol, 1);
+          }
+          if (msg.type === 'alert' && msg.data) {
+            addAlert(msg.data);
+          }
+          if (msg.type === 'timeline' && msg.data) {
+            addTimelineEvent(msg.data.symbol, msg.data);
+          }
+        } catch {}
+      };
+
+      ws.onclose = () => {
+        setWsConnected(false);
+        console.log('[WS] Disconnected, reconnecting in 3s...');
+        reconnectTimer.current = setTimeout(connect, 3000);
+      };
+
+      ws.onerror = () => {
+        ws.close();
+      };
+    } catch {
+      reconnectTimer.current = setTimeout(connect, 3000);
+    }
+  }, [setWsConnected, addAlert, addTimelineEvent, setLastFetchTime, setSymbolState, fetchDashboard]);
 
   useEffect(() => {
     connect();
