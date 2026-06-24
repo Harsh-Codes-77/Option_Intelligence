@@ -159,7 +159,7 @@ async function runDataCycle(): Promise<void> {
         const e2 = runSupplyDemandEngine(symbol, e1);
         const e3 = await runPCREngine(symbol, optionChainData);
         const e4 = runMaxPainEngine(symbol, optionChainData);
-        const e5 = runVolatilityEngine(symbol, optionChainData, vix);
+        const e5 = await runVolatilityEngine(symbol, optionChainData, vix);
         const e9 = await runTechnicalEngine(symbol, spotPrice);
         const e10 = await runFuturesEngine(symbol, optionChainData);
         
@@ -246,7 +246,7 @@ async function runDataCycle(): Promise<void> {
         }
 
       } catch (err: any) {
-        console.error(`[Scheduler] Error processing ${symbol}:`, err.message);
+        console.error(`[Scheduler] Error processing ${symbol}:`, err.stack || err.message);
       }
     }
 

@@ -1,4 +1,5 @@
 import { ParsedOptionChain } from '../fetchers/optionChain';
+import { getCache, setCache } from '../config/redis';
 
 export type VIXClassification = 'LOW_VOLATILITY' | 'NORMAL_VOLATILITY' | 'HIGH_VOLATILITY' | 'EXTREME_VOLATILITY';
 export type StrategyRec = 'SELL_OPTIONS' | 'BUY_OPTIONS' | 'NEUTRAL_STRATEGIES';
@@ -33,12 +34,11 @@ function recommendStrategy(ivRank: number): StrategyRec {
   return 'NEUTRAL_STRATEGIES';
 }
 
-export function runVolatilityEngine(
+export async function runVolatilityEngine(
   symbol: string,
   data: ParsedOptionChain,
-  vix: number,
-  ivHistory: number[] = []
-): VolatilityResult {
+  vix: number
+): Promise<VolatilityResult> {
   const { strikes, spotPrice } = data;
 
   // Find ATM strike
@@ -51,7 +51,11 @@ export function runVolatilityEngine(
   const atmIV = atmStrike ? (atmStrike.CE.iv + atmStrike.PE.iv) / 2 : 0;
 
   // IV Rank (using stored history or defaults)
-  const allIVs = ivHistory.length > 0 ? ivHistory : [atmIV];
+  const ivHistKey = `iv:history:${symbol}`;
+  const ivHistory = (await getCache<number[]>(ivHistKey)) || [];
+  const updatedIvHistory = [...ivHistory, atmIV].slice(-100);
+  await setCache(ivHistKey, updatedIvHistory, 86400 * 7);
+  const allIVs = updatedIvHistory;
   const ivMin = Math.min(...allIVs);
   const ivMax = Math.max(...allIVs);
   const ivRank = ivMax > ivMin ? parseFloat((((atmIV - ivMin) / (ivMax - ivMin)) * 100).toFixed(1)) : 50;

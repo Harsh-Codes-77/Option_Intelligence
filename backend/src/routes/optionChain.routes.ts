@@ -30,7 +30,7 @@ router.get('/strikes/:symbol', async (req: Request, res: Response) => {
   // Score each strike
   const scoreStrike = (s: any, side: 'CE' | 'PE') => {
     const data = s[side];
-    const bidAskSpread = Math.abs(data.ask || 0 - data.bid || 0);
+    const bidAskSpread = Math.abs((data.ask || 0) - (data.bid || 0));
     const bidAskPct = data.ltp > 0 ? (bidAskSpread / data.ltp) * 100 : 100;
     const liquidityScore = Math.max(25 - bidAskPct * 2.5, 0);
     const volScore = Math.min((data.volume || 0) / 10000 * 20, 20);

@@ -151,3 +151,5 @@ docker compose logs -f
 
 ## 📝 License
 This project is for educational and quantitative research purposes.
+
+Minor Update
