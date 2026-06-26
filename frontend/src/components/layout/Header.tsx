@@ -54,10 +54,15 @@ export function Header() {
             </div>
           ) : null}
 
-          {/* Market Status */}
           <div className="flex items-center gap-1.5">
             <div className={`pulse-dot ${state?.marketStatus === 'OPEN' ? 'pulse-dot-green' : state?.marketStatus === 'PRE_OPEN' ? 'pulse-dot-yellow' : 'pulse-dot-red'}`} />
-            <span className="text-[10px] text-[var(--color-text-muted)] hidden sm:inline">{state?.marketStatus || 'CLOSED'}</span>
+            <span className={`text-[10px] font-bold hidden sm:inline ${
+              state?.marketStatus === 'OPEN' ? 'text-[var(--color-bullish)]' : 
+              state?.marketStatus === 'PRE_OPEN' ? 'text-[var(--color-warning)]' : 
+              'text-[var(--color-bearish)]'
+            }`}>
+              {state?.marketStatus || 'CLOSED'}
+            </span>
           </div>
 
           {/* WS Status */}

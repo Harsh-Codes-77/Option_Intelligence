@@ -7,11 +7,11 @@
   --color-border: #222222;
   --color-text: #EEEEEE;
   --color-text-muted: #555555;
-  --color-bullish: #EEEEEE;
-  --color-bearish: #888888;
-  --color-neutral: #AAAAAA;
-  --color-accent: #EEEEEE;
-  --color-warning: #AAAAAA;
+  --color-bullish: #10B981;
+  --color-bearish: #EF4444;
+  --color-neutral: #6B7280;
+  --color-accent: #3B82F6;
+  --color-warning: #F59E0B;
   --font-sans: 'Inter', system-ui, sans-serif;
 }
 
@@ -66,9 +66,9 @@
     font-weight: 600;
     letter-spacing: 0.05em;
   }
-  .badge-bullish { background: #1A1A1A; color: #EEEEEE; border: 1px solid #333333; }
-  .badge-bearish { background: #1A1A1A; color: #888888; border: 1px solid #333333; }
-  .badge-neutral { background: #1A1A1A; color: #AAAAAA; border: 1px solid #333333; }
+  .badge-bullish { background: rgba(16, 185, 129, 0.1); color: var(--color-bullish); border: 1px solid rgba(16, 185, 129, 0.2); }
+  .badge-bearish { background: rgba(239, 68, 68, 0.1); color: var(--color-bearish); border: 1px solid rgba(239, 68, 68, 0.2); }
+  .badge-neutral { background: rgba(107, 114, 128, 0.1); color: var(--color-neutral); border: 1px solid rgba(107, 114, 128, 0.2); }
 
   .pulse-dot {
     width: 8px;
@@ -77,14 +77,10 @@
   }
   .pulse-dot-green { background: var(--color-bullish); }
   .pulse-dot-red { background: var(--color-bearish); }
-  .pulse-dot-yellow { background: var(--color-neutral); }
+  .pulse-dot-yellow { background: var(--color-warning); }
 
-  .glow-bullish { box-shadow: none; }
-  .glow-bearish { box-shadow: none; }
-
-  [style*="linear-gradient"] {
-    background: #EEEEEE !important;
-  }
+  .glow-bullish { box-shadow: 0 0 15px rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); }
+  .glow-bearish { box-shadow: 0 0 15px rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); }
 
   header {
     backdrop-filter: none !important;
