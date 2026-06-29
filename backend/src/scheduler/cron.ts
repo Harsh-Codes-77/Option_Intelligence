@@ -112,11 +112,29 @@ async function runDataCycle(): Promise<void> {
     // Fetch shared data
     const indicesData = await fetchIndices();
     await nseFetcher.rateLimitDelay();
-    const fiiDiiData = await fetchFIIDII();
-    await nseFetcher.rateLimitDelay();
-    const breadthData = await fetchBreadthData();
-    await nseFetcher.rateLimitDelay();
-    const sectorData = await fetchAllSectors();
+    
+    // Fetch FII/DII much less frequently (e.g., every 60 cycles = 1 hr)
+    let fiiDiiData: any = await getCache('fiiDii_data');
+    if (!fiiDiiData || cycleCount % 60 === 1) {
+      fiiDiiData = await fetchFIIDII();
+      if (fiiDiiData) await setCache('fiiDii_data', fiiDiiData, 3600);
+      await nseFetcher.rateLimitDelay();
+    }
+
+    // Fetch breadth less frequently (e.g., every 5 cycles)
+    let breadthData: any = await getCache('breadth_data');
+    if (!breadthData || cycleCount % 5 === 1) {
+      breadthData = await fetchBreadthData();
+      if (breadthData) await setCache('breadth_data', breadthData, 300);
+      await nseFetcher.rateLimitDelay();
+    }
+
+    // Fetch sectors (12 requests) less frequently (e.g., every 5 cycles)
+    let sectorData: any = await getCache('sector_data');
+    if (!sectorData || cycleCount % 5 === 1) {
+      sectorData = await fetchAllSectors();
+      if (sectorData) await setCache('sector_data', sectorData, 300);
+    }
 
     // Run breadth, sector, and institutional engines (shared across symbols)
     const e6 = await runBreadthEngine(breadthData);
