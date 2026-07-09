@@ -1,8 +1,18 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useDashboardStore } from '../store/dashboardStore';
 
-const WS_URL = import.meta.env.VITE_WS_URL || `ws://${window.location.host}/ws/`;
 const API_URL = import.meta.env.VITE_API_URL || '';
+
+let WS_URL = import.meta.env.VITE_WS_URL;
+if (!WS_URL) {
+  if (API_URL) {
+    WS_URL = API_URL.replace(/^http/, 'ws') + '/ws/';
+  } else {
+    WS_URL = window.location.protocol === 'https:' 
+      ? `wss://${window.location.host}/ws/` 
+      : `ws://${window.location.host}/ws/`;
+  }
+}
 
 export function useWebSocket() {
   const wsRef = useRef<WebSocket | null>(null);
@@ -10,7 +20,7 @@ export function useWebSocket() {
   const { setWsConnected, setSymbolState, addAlert, addTimelineEvent, setLastFetchTime, activeSymbol } = useDashboardStore();
 
   // Initial HTTP fetch for dashboard data
-  const fetchDashboard = useCallback(async (symbol: string, retries = 3) => {
+  const fetchDashboard = useCallback(async (symbol: string, retries = 10) => {
     try {
       const res = await fetch(`${API_URL}/api/dashboard/${symbol}`);
       if (res.ok) {

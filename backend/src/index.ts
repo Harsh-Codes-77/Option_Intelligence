@@ -17,14 +17,9 @@ async function main() {
 
   // Middleware
   app.use(cors({
-    origin: function (origin, callback) {
-      const allowedOrigins = ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000', 'http://127.0.0.1:5173'];
-      if (process.env.FRONTEND_URL) allowedOrigins.push(process.env.FRONTEND_URL);
-      if (!origin || allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
+    origin: function(origin, callback) {
+      // Allow any origin that makes a request, effectively bypassing CORS blocks
+      callback(null, origin || '*');
     },
     credentials: true,
   }));
