@@ -20,7 +20,7 @@ export function useWebSocket() {
   const { setWsConnected, setSymbolState, addAlert, addTimelineEvent, setLastFetchTime, activeSymbol } = useDashboardStore();
 
   // Initial HTTP fetch for dashboard data
-  const fetchDashboard = useCallback(async (symbol: string, retries = 10) => {
+  const fetchDashboard = useCallback(async (symbol: string, retries = 30) => {
     try {
       const res = await fetch(`${API_URL}/api/dashboard/${symbol}`);
       if (res.ok) {
@@ -36,7 +36,7 @@ export function useWebSocket() {
         }
       }
     } catch (err) {
-      console.warn('[API] Dashboard fetch failed:', err);
+      console.warn(`[API] Dashboard fetch failed for ${API_URL}/api/dashboard/${symbol}:`, err);
       if (retries > 0) {
         setTimeout(() => fetchDashboard(symbol, retries - 1), 5000);
       }

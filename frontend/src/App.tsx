@@ -20,9 +20,19 @@ function App() {
       <main className="pt-16 pb-16 px-3 md:px-6 max-w-[1600px] mx-auto">
         {!state ? (
           <div className="flex flex-col items-center justify-center h-[60vh] text-[var(--color-text-muted)] space-y-4">
-            <div className="w-12 h-12 border-4 border-[var(--color-surface)] border-t-[var(--color-accent)] rounded-full animate-spin"></div>
-            <p className="text-sm font-medium tracking-wide">Initializing data for {activeSymbol}...</p>
-            <p className="text-xs opacity-60">This may take a few moments as we fetch live market data.</p>
+            {(!import.meta.env.VITE_API_URL && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') ? (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-6 rounded-lg max-w-md text-center">
+                <h3 className="font-bold text-lg mb-2">Deployment Configuration Error</h3>
+                <p className="text-sm">VITE_API_URL environment variable is missing.</p>
+                <p className="text-sm mt-2 opacity-80">Please go to your Vercel project settings, add <b>VITE_API_URL</b> with your Render backend URL (e.g., https://your-backend.onrender.com), and redeploy.</p>
+              </div>
+            ) : (
+              <>
+                <div className="w-12 h-12 border-4 border-[var(--color-surface)] border-t-[var(--color-accent)] rounded-full animate-spin"></div>
+                <p className="text-sm font-medium tracking-wide">Initializing data for {activeSymbol}...</p>
+                <p className="text-xs opacity-60">This may take a few moments as we fetch live market data.</p>
+              </>
+            )}
           </div>
         ) : (
           <>
