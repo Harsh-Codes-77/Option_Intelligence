@@ -1,11 +1,13 @@
 import { ParsedOptionChain } from '../fetchers/optionChain';
 import { getCache, setCache } from '../config/redis';
+import { DataStatus } from '../store/state';
 
 export type PCRClassification = 'EXTREMELY_BULLISH' | 'BULLISH' | 'NEUTRAL' | 'BEARISH' | 'EXTREMELY_BEARISH';
 export type PCRTrend = 'RISING' | 'FALLING' | 'STABLE';
 export type PCRSignal = 'STRONG_BULLISH' | 'BULLISH' | 'NEUTRAL' | 'BEARISH' | 'STRONG_BEARISH';
 
 export interface PCRResult {
+  data_status: DataStatus;
   symbol: string;
   pcrOI: number;
   pcrVolume: number;
@@ -38,7 +40,19 @@ function determinePCRSignal(pcr: number, trend: PCRTrend): PCRSignal {
 }
 
 export async function runPCREngine(symbol: string, data: ParsedOptionChain): Promise<PCRResult> {
+  const defaults: PCRResult = {
+    data_status: 'NO_DATA', symbol, pcrOI: 0, pcrVolume: 0, classification: 'NEUTRAL',
+    trend: 'STABLE', signal: 'NEUTRAL', atmPCR: 0, totalPutOI: 0, totalCallOI: 0,
+    totalPutVolume: 0, totalCallVolume: 0, pcrHistory: [],
+    formulaBreakdown: { title: 'PCR Score Calculation', steps: [{ label: 'Status', value: 'No Data' }] }
+  };
+
+  if (!data || !data.strikes || data.strikes.length === 0) return defaults;
+
   const { strikes, spotPrice, totalCE_OI, totalPE_OI, totalCE_Volume, totalPE_Volume } = data;
+  
+  if (totalCE_OI === 0 && totalPE_OI === 0) return defaults;
+
   const pcrOI = totalCE_OI > 0 ? parseFloat((totalPE_OI / totalCE_OI).toFixed(4)) : 0;
   const pcrVolume = totalCE_Volume > 0 ? parseFloat((totalPE_Volume / totalCE_Volume).toFixed(4)) : 0;
   const classification = classifyPCR(pcrOI);
@@ -62,6 +76,7 @@ export async function runPCREngine(symbol: string, data: ParsedOptionChain): Pro
   await setCache(`pcr:history:${symbol}`, newHistory, 86400);
 
   return {
+    data_status: 'LIVE',
     symbol, pcrOI, pcrVolume, classification, trend, signal, atmPCR,
     totalPutOI: totalPE_OI, totalCallOI: totalCE_OI,
     totalPutVolume: totalPE_Volume, totalCallVolume: totalCE_Volume,
@@ -69,6 +84,7 @@ export async function runPCREngine(symbol: string, data: ParsedOptionChain): Pro
     formulaBreakdown: {
       title: 'PCR Score Calculation',
       steps: [
+        { step: 0, label: 'Data Status', formula: 'Validating total OI', value: 'LIVE' },
         { step: 1, label: 'Total Put OI', formula: 'Sum all PE openInterest', value: totalPE_OI.toLocaleString() },
         { step: 2, label: 'Total Call OI', formula: 'Sum all CE openInterest', value: totalCE_OI.toLocaleString() },
         { step: 3, label: 'PCR OI', formula: `Put OI / Call OI`, value: pcrOI.toFixed(4) },

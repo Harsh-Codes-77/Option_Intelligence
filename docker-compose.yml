@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   postgres:
@@ -22,7 +21,9 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
-    command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru
+    command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru --appendonly yes
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -31,11 +32,12 @@ services:
 
   backend:
     build: ./backend
-    ports:
-      - "3001:3001"
+    volumes:
+      - ./backend/dist:/app/dist
+    network_mode: "host"
     environment:
-      DATABASE_URL: postgresql://trader:secure_password@postgres:5432/options_intelligence
-      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://trader:secure_password@localhost:5432/options_intelligence
+      REDIS_URL: redis://localhost:6379
       PORT: "3001"
       NODE_ENV: production
     depends_on:
@@ -47,11 +49,11 @@ services:
 
   frontend:
     build: ./frontend
-    ports:
-      - "3000:80"
+    network_mode: "host"
     depends_on:
       - backend
     restart: unless-stopped
 
 volumes:
   postgres_data:
+  redis_data:

@@ -16,65 +16,53 @@ export interface FuturesData {
 }
 
 export async function fetchFuturesData(symbol: string): Promise<FuturesData | null> {
-  // Futures data is embedded in the option chain response or can be fetched from equity-stockIndices
-  // For index futures, we'll extract from the option chain or use a dedicated endpoint
   try {
-    const url = `https://www.nseindia.com/api/equity-stockIndices?index=${encodeURIComponent(symbol === 'NIFTY' ? 'NIFTY 50' : symbol === 'BANKNIFTY' ? 'NIFTY BANK' : symbol)}`;
-    const data = await nseFetcher.fetch<any>(url);
+    // Since /api/quote-derivative is blocked by NSE, we approximate futures using spot price
+    // from the option chain or equity indices endpoint.
+    let spotPrice = 0;
+    try {
+      const ocData = await nseFetcher.nseIndia.getIndexOptionChain(symbol);
+      if (ocData && ocData.records && ocData.records.underlyingValue) {
+        spotPrice = ocData.records.underlyingValue;
+      }
+    } catch (err) {
+      // fallback to getEquityStockIndices
+      const indexData = await nseFetcher.nseIndia.getEquityStockIndices(symbol);
+      if (indexData && indexData.data && indexData.data.length > 0) {
+        spotPrice = indexData.data[0].lastPrice || (indexData.data[0] as any).last || 0;
+      }
+    }
 
-    if (!data || !data.data) return null;
+    if (!spotPrice) return null;
 
-    // Find the index entry
-    const indexEntry = data.data.find((d: any) =>
-      d.symbol === symbol || d.symbol === 'NIFTY 50' || d.symbol === 'NIFTY BANK'
-    );
+    const futuresPrice = spotPrice; // approximate
+    const basis = 0;
+    const basisPct = 0;
 
-    if (!indexEntry) return null;
+    // Approximate expiry to next Thursday
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const daysUntilThursday = (4 + 7 - dayOfWeek) % 7;
+    const expiryDateObj = new Date(now.getTime() + daysUntilThursday * 24 * 60 * 60 * 1000);
+    const expiryDate = expiryDateObj.toISOString().split('T')[0];
+    const daysToExpiry = daysUntilThursday || 7;
 
-    const spotPrice = indexEntry.lastPrice || indexEntry.open || 0;
-
-    // Futures data might not be directly available from this endpoint
-    // We'll construct a basic futures data object from market data
     return {
       symbol,
-      futuresPrice: spotPrice, // Will be overridden by option chain futures data
+      futuresPrice,
       spotPrice,
-      basis: 0,
-      basisPct: 0,
+      basis,
+      basisPct,
       oi: 0,
       oiChange: 0,
       volume: 0,
-      expiryDate: '',
-      daysToExpiry: 0,
-      change: indexEntry.change || 0,
-      changePct: indexEntry.pChange || 0,
+      expiryDate,
+      daysToExpiry,
+      change: 0,
+      changePct: 0,
     };
   } catch (err: any) {
     console.error(`[Futures] Fetch failed for ${symbol}:`, err.message);
     return null;
   }
-}
-
-// Extract futures info from option chain response when available
-export function extractFuturesFromOptionChain(optionChainRaw: any, spotPrice: number, symbol: string): Partial<FuturesData> {
-  // NSE option chain sometimes includes futures data in the response
-  // Look for futuresData or metadata sections
-  if (!optionChainRaw) return {};
-
-  // Calculate days to expiry from nearest expiry date
-  const expiryDates = optionChainRaw.records?.expiryDates || [];
-  const nearestExpiry = expiryDates[0];
-  let daysToExpiry = 0;
-
-  if (nearestExpiry) {
-    const expiryDate = new Date(nearestExpiry);
-    const now = new Date();
-    daysToExpiry = Math.max(0, Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
-  }
-
-  return {
-    expiryDate: nearestExpiry || '',
-    daysToExpiry,
-    spotPrice,
-  };
 }

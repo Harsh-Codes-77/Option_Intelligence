@@ -31,19 +31,19 @@ export interface StockData {
   totalTradedValue: number;
 }
 
-const SECTOR_URLS: Record<string, string> = {
-  BANK: 'https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%20BANK',
-  IT: 'https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%20IT',
-  AUTO: 'https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%20AUTO',
-  PHARMA: 'https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%20PHARMA',
-  METAL: 'https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%20METAL',
-  PSU_BANK: 'https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%20PSU%20BANK',
-  ENERGY: 'https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%20ENERGY',
-  FMCG: 'https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%20FMCG',
-  REALTY: 'https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%20REALTY',
-  INFRA: 'https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%20INFRA',
-  FIN_SERVICES: 'https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%20FINANCIAL%20SERVICES',
-  DEFENCE: 'https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%20INDIA%20DEFENCE',
+const SECTOR_NAMES: Record<string, string> = {
+  BANK: 'NIFTY BANK',
+  IT: 'NIFTY IT',
+  AUTO: 'NIFTY AUTO',
+  PHARMA: 'NIFTY PHARMA',
+  METAL: 'NIFTY METAL',
+  PSU_BANK: 'NIFTY PSU BANK',
+  ENERGY: 'NIFTY ENERGY',
+  FMCG: 'NIFTY FMCG',
+  REALTY: 'NIFTY REALTY',
+  INFRA: 'NIFTY INFRA',
+  FIN_SERVICES: 'NIFTY FINANCIAL SERVICES',
+  DEFENCE: 'NIFTY INDIA DEFENCE',
 };
 
 function parseStockData(entry: any): StockData {
@@ -61,52 +61,49 @@ function parseStockData(entry: any): StockData {
   };
 }
 
-export async function fetchSectorData(sectorKey: string): Promise<SectorData | null> {
-  const url = SECTOR_URLS[sectorKey];
-  if (!url) return null;
-
-  const data = await nseFetcher.fetch<any>(url);
-  if (!data || !data.data || data.data.length === 0) return null;
-
-  const entries = data.data as any[];
-  // First entry is typically the index summary
-  const indexEntry = entries[0];
-  const constituents = entries.slice(1).map(parseStockData);
-
-  const advances = constituents.filter((s) => s.change > 0).length;
-  const declines = constituents.filter((s) => s.change < 0).length;
-  const unchanged = constituents.filter((s) => s.change === 0).length;
-
-  const sectorInfo = SECTORS.find((s) => s.key === sectorKey);
-
-  return {
-    key: sectorKey,
-    name: sectorInfo?.name || sectorKey,
-    lastPrice: indexEntry.lastPrice || indexEntry.last || 0,
-    open: indexEntry.open || 0,
-    high: indexEntry.dayHigh || indexEntry.high || 0,
-    low: indexEntry.dayLow || indexEntry.low || 0,
-    previousClose: indexEntry.previousClose || 0,
-    change: indexEntry.change || 0,
-    changePct: indexEntry.pChange || 0,
-    volume: constituents.reduce((sum, s) => sum + s.totalTradedVolume, 0),
-    advances,
-    declines,
-    unchanged,
-    constituents,
-  };
-}
-
 export async function fetchAllSectors(): Promise<SectorData[]> {
   const sectors: SectorData[] = [];
-  const keys = Object.keys(SECTOR_URLS);
+  const keys = Object.keys(SECTOR_NAMES);
+
+  let data;
+  try {
+    data = await nseFetcher.nseIndia.getAllIndices();
+  } catch (err: any) {
+    console.warn(`[Sectors] Fetch failed:`, err.message);
+    return sectors;
+  }
+  
+  if (!data || !data.data) return sectors;
+  const entries = data.data as any[];
 
   for (const key of keys) {
-    const data = await fetchSectorData(key);
-    if (data) {
-      sectors.push(data);
+    const indexName = SECTOR_NAMES[key];
+    const indexEntry = entries.find(e => e.index === indexName || e.indexSymbol === indexName);
+    
+    if (indexEntry) {
+      const sectorInfo = SECTORS.find((s) => s.key === key);
+      
+      const advances = parseInt(indexEntry.advances) || 0;
+      const declines = parseInt(indexEntry.declines) || 0;
+      const unchanged = parseInt(indexEntry.unchanged) || 0;
+      
+      sectors.push({
+        key,
+        name: sectorInfo?.name || key,
+        lastPrice: indexEntry.last || indexEntry.lastPrice || 0,
+        open: indexEntry.open || 0,
+        high: indexEntry.high || 0,
+        low: indexEntry.low || 0,
+        previousClose: indexEntry.previousClose || 0,
+        change: indexEntry.variation || indexEntry.change || 0,
+        changePct: indexEntry.percentChange || indexEntry.pChange || 0,
+        volume: 0,
+        advances,
+        declines,
+        unchanged,
+        constituents: [],
+      });
     }
-    await nseFetcher.rateLimitDelay();
   }
 
   return sectors;

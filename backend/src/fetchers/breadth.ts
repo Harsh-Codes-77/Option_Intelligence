@@ -12,34 +12,33 @@ export interface BreadthData {
 const NIFTY_500_URL = 'https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%20500';
 
 export async function fetchBreadthData(): Promise<BreadthData | null> {
-  const data = await nseFetcher.fetch<any>(NIFTY_500_URL);
+  let data;
+  try {
+    data = await nseFetcher.nseIndia.getAllIndices();
+  } catch (err: any) {
+    console.warn(`[Breadth] Fetch failed for NIFTY 500:`, err.message);
+    return null;
+  }
   if (!data || !data.data) return null;
 
   const entries = data.data as any[];
-  // Skip the first entry (index summary)
-  const stocks: StockData[] = entries.slice(1).map((entry: any) => ({
-    symbol: entry.symbol || '',
-    lastPrice: entry.lastPrice || 0,
-    change: entry.change || 0,
-    pChange: entry.pChange || 0,
-    open: entry.open || 0,
-    high: entry.dayHigh || entry.high || 0,
-    low: entry.dayLow || entry.low || 0,
-    previousClose: entry.previousClose || 0,
-    totalTradedVolume: entry.totalTradedVolume || 0,
-    totalTradedValue: entry.totalTradedValue || 0,
-  }));
+  const nifty500 = entries.find(e => e.index === 'NIFTY 500' || e.indexSymbol === 'NIFTY 500');
+  
+  if (!nifty500) return null;
 
-  const advancing = stocks.filter((s) => s.change > 0 || s.lastPrice > s.previousClose).length;
-  const declining = stocks.filter((s) => s.change < 0 || s.lastPrice < s.previousClose).length;
-  const unchanged = stocks.filter((s) => s.change === 0 && s.lastPrice === s.previousClose).length;
+  // Since getAllIndices only provides summary stats (advances, declines, unchanged) and not constituents,
+  // we will use the summary stats.
+  const advancing = parseInt(nifty500.advances) || 0;
+  const declining = parseInt(nifty500.declines) || 0;
+  const unchanged = parseInt(nifty500.unchanged) || 0;
+  const totalStocks = advancing + declining + unchanged;
 
   return {
-    totalStocks: stocks.length,
+    totalStocks,
     advancing,
     declining,
     unchanged,
-    stocks,
+    stocks: [], // We don't have individual stocks from getAllIndices, but we only need aggregate numbers
   };
 }
 

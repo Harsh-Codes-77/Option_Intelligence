@@ -1,10 +1,17 @@
 // In-memory rolling state for current engine outputs per symbol
 
+export type DataStatus = 'LIVE' | 'STALE' | 'NO_DATA' | 'WARMING_UP';
+
+export interface ModuleResult {
+  data_status: DataStatus;
+  [key: string]: any;
+}
+
 export interface EngineOutput {
   engine: string;
   signal: string;
   score: number;
-  result: any;
+  result: ModuleResult | any;
   formulaBreakdown: any;
   timestamp: number;
 }

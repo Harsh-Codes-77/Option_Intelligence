@@ -1,5 +1,6 @@
 import { ParsedOptionChain, ParsedStrike } from '../fetchers/optionChain';
 import { getCache } from '../config/redis';
+import { DataStatus } from '../store/state';
 
 // OI Activity classifications
 export type OIActivity = 'LONG_BUILDUP' | 'SHORT_BUILDUP' | 'SHORT_COVERING' | 'LONG_UNWINDING' | 'NEUTRAL';
@@ -13,6 +14,7 @@ export interface StrikeAnalysis {
     volume: number;
     iv: number;
     ltp: number;
+    theta: number;
     activity: OIActivity;
     oiChange1m: number;
     oiChange5m: number;
@@ -27,6 +29,7 @@ export interface StrikeAnalysis {
     volume: number;
     iv: number;
     ltp: number;
+    theta: number;
     activity: OIActivity;
     oiChange1m: number;
     oiChange5m: number;
@@ -47,6 +50,7 @@ export interface StrikeMigration {
 }
 
 export interface OptionChainEngineResult {
+  data_status: DataStatus;
   symbol: string;
   spotPrice: number;
   timestamp: string;
@@ -85,12 +89,50 @@ function findATMStrike(strikes: ParsedStrike[], spotPrice: number): number {
   return closest;
 }
 
+// Normal CDF approximation
+function standardNormalCDF(x: number): number {
+  const t = 1 / (1 + 0.2316419 * Math.abs(x));
+  const d = 0.3989423 * Math.exp(-x * x / 2);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  return x > 0 ? 1 - p : p;
+}
+
+function calculateTheta(spotPrice: number, strike: number, dte: number, iv: number, type: 'CE' | 'PE'): number {
+  if (dte <= 0 || iv <= 0) return 0;
+  const t = dte / 365;
+  const r = 0.07; // 7% risk-free rate assumption
+  const vol = iv / 100;
+  const d1 = (Math.log(spotPrice / strike) + (r + (vol * vol) / 2) * t) / (vol * Math.sqrt(t));
+  const d2 = d1 - vol * Math.sqrt(t);
+  const Nd1 = Math.exp(-0.5 * d1 * d1) / Math.sqrt(2 * Math.PI);
+  
+  const part1 = -(spotPrice * Nd1 * vol) / (2 * Math.sqrt(t));
+  if (type === 'CE') {
+    const part2 = r * strike * Math.exp(-r * t) * standardNormalCDF(d2);
+    return parseFloat(((part1 - part2) / 365).toFixed(2));
+  } else {
+    const part2 = r * strike * Math.exp(-r * t) * standardNormalCDF(-d2);
+    return parseFloat(((part1 + part2) / 365).toFixed(2));
+  }
+}
+
 export async function runOptionChainEngine(
   symbol: string,
   data: ParsedOptionChain
 ): Promise<OptionChainEngineResult> {
+  const defaultRes: OptionChainEngineResult = {
+    data_status: 'NO_DATA', symbol, spotPrice: data?.spotPrice || 0, timestamp: data?.timestamp || '', selectedExpiry: data?.selectedExpiry || '', expiryDates: data?.expiryDates || [],
+    strikes: [], atmStrike: 0, highestCE_OI_Strike: 0, highestPE_OI_Strike: 0, strikeMigrations: [], totalCE_OI: 0, totalPE_OI: 0,
+    formulaBreakdown: { title: 'Option Chain Analysis', steps: [{ label: 'Status', value: 'No Data' }] }
+  };
+  if (!data || !data.strikes || data.strikes.length === 0) return defaultRes;
+
   const { spotPrice, strikes, timestamp, selectedExpiry, expiryDates } = data;
   const atmStrike = findATMStrike(strikes, spotPrice);
+
+  const expiryDate = new Date(selectedExpiry || expiryDates[0]);
+  const diffTime = expiryDate.getTime() - Date.now();
+  const dte = Math.max(diffTime / (1000 * 60 * 60 * 24), 1);
 
   // Get previous snapshots from Redis for multi-timeframe analysis
   const snap1m = await getCache<ParsedOptionChain>(`oi:snapshot:${symbol}:1min`);
@@ -149,6 +191,7 @@ export async function runOptionChainEngine(
         volume: s.CE.volume,
         iv: s.CE.iv,
         ltp: s.CE.ltp,
+        theta: calculateTheta(spotPrice, s.strikePrice, dte, s.CE.iv, 'CE'),
         activity: ceActivity,
         oiChange1m: ceOi1m,
         oiChange5m: ceOi5m,
@@ -163,6 +206,7 @@ export async function runOptionChainEngine(
         volume: s.PE.volume,
         iv: s.PE.iv,
         ltp: s.PE.ltp,
+        theta: calculateTheta(spotPrice, s.strikePrice, dte, s.PE.iv, 'PE'),
         activity: peActivity,
         oiChange1m: peOi1m,
         oiChange5m: peOi5m,
@@ -210,6 +254,7 @@ export async function runOptionChainEngine(
   }
 
   return {
+    data_status: 'LIVE',
     symbol,
     spotPrice,
     timestamp,

@@ -1,4 +1,5 @@
 import { OptionChainEngineResult, StrikeAnalysis } from './01_optionChain.engine';
+import { DataStatus } from '../store/state';
 
 export type StrengthRating = 'VERY_STRONG' | 'STRONG' | 'MODERATE' | 'WEAK';
 
@@ -21,6 +22,7 @@ export interface OIWall {
 }
 
 export interface SupplyDemandResult {
+  data_status: DataStatus;
   symbol: string;
   spotPrice: number;
   resistanceLevels: SupportResistanceLevel[];
@@ -42,7 +44,17 @@ export function runSupplyDemandEngine(
   symbol: string,
   optionChainResult: OptionChainEngineResult
 ): SupplyDemandResult {
-  const { strikes, spotPrice, totalCE_OI, totalPE_OI } = optionChainResult;
+  const { strikes, spotPrice, totalCE_OI, totalPE_OI, data_status } = optionChainResult;
+
+  if (data_status === 'NO_DATA') {
+    return {
+      data_status, symbol, spotPrice: spotPrice || 0, resistanceLevels: [], supportLevels: [],
+      ceOIWall: { strike: 0, side: 'CE', oi: 0, distancePct: 0, isFreshOI: false },
+      peOIWall: { strike: 0, side: 'PE', oi: 0, distancePct: 0, isFreshOI: false },
+      signal: 'NEUTRAL',
+      formulaBreakdown: { title: 'Supply & Demand Analysis', steps: [{ label: 'Status', value: 'No Data' }] }
+    };
+  }
 
   // Sort by CE OI descending for resistance
   const sortedByCE = [...strikes].sort((a, b) => b.CE.oi - a.CE.oi);
@@ -120,6 +132,7 @@ export function runSupplyDemandEngine(
   }
 
   return {
+    data_status,
     symbol,
     spotPrice,
     resistanceLevels: top3Resistance,

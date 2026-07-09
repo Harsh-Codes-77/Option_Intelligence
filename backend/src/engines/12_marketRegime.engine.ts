@@ -1,9 +1,11 @@
 import { getCache } from '../config/redis';
+import { DataStatus } from '../store/state';
 
 export type MarketRegime = 'TRENDING_BULLISH' | 'TRENDING_BEARISH' | 'BREAKOUT' | 'BREAKDOWN' |
   'HIGH_VOLATILITY' | 'LOW_VOLATILITY_RANGE' | 'RANGE_BOUND';
 
 export interface RegimeResult {
+  data_status: DataStatus;
   symbol: string;
   regime: MarketRegime;
   rulesFired: string[];
@@ -24,6 +26,11 @@ export async function runRegimeEngine(
   vix: number,
   volumeRatio: number
 ): Promise<RegimeResult> {
+  let data_status: DataStatus = 'LIVE';
+  if (spotPrice === 0 || ema20 === 0) {
+    data_status = 'WARMING_UP';
+  }
+
   const rules: string[] = [];
 
   // Rule 1: EMA positions
@@ -48,7 +55,10 @@ export async function runRegimeEngine(
     const range = Math.max(...recent) - Math.min(...recent);
     adx = range > 0 ? parseFloat(((avgChange / range) * 100 * 2).toFixed(1)) : 15;
     adx = Math.min(adx, 60);
+  } else if (data_status === 'LIVE') {
+    data_status = 'WARMING_UP'; // Require history for accurate regime
   }
+  
   const strongTrend = adx > 25;
   rules.push(`ADX = ${adx.toFixed(1)} → ${strongTrend ? 'STRONG_TREND' : 'WEAK_TREND/RANGE'}`);
 
@@ -58,6 +68,14 @@ export async function runRegimeEngine(
   const low20 = highs20.length > 0 ? Math.min(...highs20) : spotPrice;
   const nearHighBreakout = spotPrice >= high20 * 0.995;
   const nearLowBreakdown = spotPrice <= low20 * 1.005;
+
+  if (data_status === 'WARMING_UP') {
+    return {
+      data_status, symbol, regime: 'RANGE_BOUND', rulesFired: ['Insufficient data for regime classification'],
+      adx: 0, spotVsEMA200: 'BELOW', spotVsEMA50: 'BELOW', spotVsEMA20: 'BELOW', vixLevel: 'NORMAL',
+      formulaBreakdown: { title: 'Market Regime Classification', steps: [{ label: 'Status', value: data_status === 'WARMING_UP' ? 'Warming Up...' : 'No Data' }], result: 'UNKNOWN' }
+    };
+  }
 
   // Regime Classification
   let regime: MarketRegime;
@@ -86,6 +104,7 @@ export async function runRegimeEngine(
   }
 
   return {
+    data_status,
     symbol, regime, rulesFired: rules, adx,
     spotVsEMA200: aboveEMA200 ? 'ABOVE' : 'BELOW',
     spotVsEMA50: aboveEMA50 ? 'ABOVE' : 'BELOW',

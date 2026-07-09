@@ -10,7 +10,7 @@ import optionChainRoutes from './routes/optionChain.routes';
 import historyRoutes from './routes/history.routes';
 import explainRoutes from './routes/explain.routes';
 
-const PORT = parseInt(process.env.PORT || '3001', 10);
+const PORT = parseInt(process.env.PORT || '3002', 10);
 
 async function main() {
   const app = express();

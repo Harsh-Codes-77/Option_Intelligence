@@ -1,10 +1,12 @@
 import { FIIDIIData } from '../fetchers/fiiDii';
 import { getCache, setCache } from '../config/redis';
+import { DataStatus } from '../store/state';
 
 export type InstitutionalSignal = 'INSTITUTIONAL_LONG_BUILDUP' | 'INSTITUTIONAL_SHORT_BUILDUP' |
   'INSTITUTIONAL_SHORT_COVERING' | 'INSTITUTIONAL_LONG_UNWINDING' | 'INSTITUTIONAL_HEDGING' | 'NEUTRAL';
 
 export interface InstitutionalFlowResult {
+  data_status: DataStatus;
   fiiNet: number;
   diiNet: number;
   fiiBuy: number;
@@ -22,6 +24,7 @@ export interface InstitutionalFlowResult {
 
 export async function runInstitutionalEngine(fiiDii: FIIDIIData | null): Promise<InstitutionalFlowResult> {
   const defaults: InstitutionalFlowResult = {
+    data_status: 'NO_DATA',
     fiiNet: 0, diiNet: 0, fiiBuy: 0, fiiSell: 0, diiBuy: 0, diiSell: 0,
     fii5DayNet: 0, fiiTrend: 'NEUTRAL', fiiLongRatio: 0.5,
     signal: 'NEUTRAL', smartMoneyIndex: 50, smartMoneySignal: 'NEUTRAL',
@@ -62,6 +65,7 @@ export async function runInstitutionalEngine(fiiDii: FIIDIIData | null): Promise
   const smartMoneySignal = smartMoneyIndex > 60 ? 'SMART_MONEY_BUYING' : smartMoneyIndex < 40 ? 'SMART_MONEY_SELLING' : 'NEUTRAL';
 
   return {
+    data_status: 'LIVE',
     fiiNet, diiNet,
     fiiBuy: fii.buyValue, fiiSell: fii.sellValue,
     diiBuy: dii.buyValue, diiSell: dii.sellValue,
@@ -72,6 +76,7 @@ export async function runInstitutionalEngine(fiiDii: FIIDIIData | null): Promise
     formulaBreakdown: {
       title: 'Institutional Flow Analysis',
       steps: [
+        { step: 0, label: 'Data Status', formula: 'Validating FII/DII numbers', value: 'LIVE' },
         { step: 1, label: 'FII Net', formula: `Buy (${fii.buyValue.toFixed(0)} Cr) - Sell (${fii.sellValue.toFixed(0)} Cr)`, value: `${fiiNet.toFixed(0)} Cr` },
         { step: 2, label: 'DII Net', formula: `Buy (${dii.buyValue.toFixed(0)} Cr) - Sell (${dii.sellValue.toFixed(0)} Cr)`, value: `${diiNet.toFixed(0)} Cr` },
         { step: 3, label: 'FII 5-Day Net', formula: `Sum of last 5 daily FII net values`, value: `${fii5DayNet.toFixed(0)} Cr` },

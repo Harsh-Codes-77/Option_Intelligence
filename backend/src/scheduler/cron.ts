@@ -5,6 +5,7 @@ import { fetchAllSectors } from '../fetchers/sectors';
 import { fetchFIIDII } from '../fetchers/fiiDii';
 import { fetchBreadthData } from '../fetchers/breadth';
 import { nseFetcher } from '../fetchers/nse.fetcher';
+import { fetchFuturesData } from '../fetchers/futures';
 import { runOptionChainEngine } from '../engines/01_optionChain.engine';
 import { runSupplyDemandEngine } from '../engines/02_supplyDemand.engine';
 import { runPCREngine } from '../engines/03_pcr.engine';
@@ -17,6 +18,7 @@ import { runTechnicalEngine } from '../engines/09_technical.engine';
 import { runFuturesEngine } from '../engines/10_futures.engine';
 import { runScoringEngine } from '../engines/11_scoring.engine';
 import { runRegimeEngine } from '../engines/12_marketRegime.engine';
+import { runGreeksEngine } from '../engines/13_greeks.engine';
 import { appState, SYMBOLS } from '../store/state';
 import { setCache, getCache } from '../config/redis';
 import { insertDB } from '../config/db';
@@ -109,6 +111,23 @@ async function runDataCycle(): Promise<void> {
     console.log(`[Scheduler] Cycle ${cycleCount} starting...`);
     const startTime = Date.now();
 
+    // Broadcast a default state immediately on the first cycle so the frontend doesn't hang
+    if (cycleCount === 1) {
+      for (const symbol of SYMBOLS) {
+        if (!appState.getSymbolState(symbol)) {
+          const emptyState = {
+            spotPrice: 0, futuresPrice: 0, vix: 0, change: 0, changePct: 0,
+            dayHigh: 0, dayLow: 0, dayOpen: 0, volume: 0, previousClose: 0,
+            engines: {},
+            lastUpdated: Date.now(),
+            marketStatus: 'CLOSED' as 'CLOSED',
+          };
+          appState.setSymbolState(symbol, emptyState);
+          broadcaster.broadcast('update', { symbol, ...emptyState }, symbol);
+        }
+      }
+    }
+
     // Fetch shared data
     const indicesData = await fetchIndices();
     await nseFetcher.rateLimitDelay();
@@ -154,8 +173,25 @@ async function runDataCycle(): Promise<void> {
         const optionChainData = await fetchOptionChain(symbol);
         await nseFetcher.rateLimitDelay();
 
+        const futuresData = await fetchFuturesData(symbol);
+        await nseFetcher.rateLimitDelay();
+
         if (!optionChainData) {
-          console.warn(`[Scheduler] No data for ${symbol}, skipping`);
+          console.warn(`[Scheduler] No data for ${symbol}, skipping processing but initializing default state`);
+          
+          // Ensure we at least broadcast a default state so the frontend doesn't hang forever
+          if (!appState.getSymbolState(symbol)) {
+            const emptyState = {
+              spotPrice: 0, futuresPrice: 0, vix: 0, change: 0, changePct: 0,
+              dayHigh: 0, dayLow: 0, dayOpen: 0, volume: 0, previousClose: 0,
+              engines: {},
+              lastUpdated: Date.now(),
+              marketStatus: 'CLOSED' as 'CLOSED',
+            };
+            appState.setSymbolState(symbol, emptyState);
+            broadcaster.broadcast('update', { symbol, ...emptyState }, symbol);
+          }
+          
           continue;
         }
 
@@ -176,38 +212,48 @@ async function runDataCycle(): Promise<void> {
         const e1 = await runOptionChainEngine(symbol, optionChainData);
         const e2 = runSupplyDemandEngine(symbol, e1);
         const e3 = await runPCREngine(symbol, optionChainData);
-        const e4 = runMaxPainEngine(symbol, optionChainData);
-        const e5 = await runVolatilityEngine(symbol, optionChainData, vix);
-        const e9 = await runTechnicalEngine(symbol, spotPrice);
-        const e10 = await runFuturesEngine(symbol, optionChainData);
-        
-        await setCache(`futures:${symbol}`, {
-          futuresPrice: e10.futuresPrice,
-          oi: 0,
-          volume: 0,
-        }, 120);
-
-        const e11 = runScoringEngine(symbol, {
-          pcrScore: e3.pcrOI,
-          futuresSignal: e10.oiSignal,
-          basisPositive: e10.basis > 0,
-          sectorTopAvg: e7.topSectors.length > 0 ? e7.topSectors.reduce((s, sec) => s + sec.sectorScore, 0) / e7.topSectors.length : 50,
-          sectorBottomAvg: e7.bottomSectors.length > 0 ? e7.bottomSectors.reduce((s, sec) => s + sec.sectorScore, 0) / e7.bottomSectors.length : 50,
-          bankLeading: e7.sectors.find(s => s.key === 'BANK')?.rrgQuadrant === 'LEADING',
-          breadthScore: e6.breadthScore,
-          volumeRatio: e10.volumeRatio,
-          priceChangePositive: (optionChainData.strikes[0]?.CE.change || 0) > 0,
-          vix,
-          trendScore: e9.trendScore,
-          momentumScore: e9.momentumScore,
-          institutionalSignal: e8.signal,
-        });
-        const e12 = await runRegimeEngine(symbol, spotPrice, e9.ema20, e9.ema50, e9.ema200, vix, e10.volumeRatio);
-
         // Update state
         const indexData = symbol === 'NIFTY' ? indicesData.nifty :
           symbol === 'BANKNIFTY' ? indicesData.bankNifty :
           symbol === 'FINNIFTY' ? indicesData.finNifty : null;
+
+        const e4 = runMaxPainEngine(symbol, optionChainData);
+        const e5 = await runVolatilityEngine(symbol, optionChainData, vix);
+        const e9 = await runTechnicalEngine(symbol, spotPrice, futuresData?.volume || 0, indexData);
+        if (futuresData) {
+          await setCache(`futures:${symbol}`, {
+            futuresPrice: futuresData.futuresPrice,
+            oi: futuresData.oi,
+            volume: futuresData.volume,
+          }, 120);
+        }
+        
+        const e10 = await runFuturesEngine(symbol, optionChainData);
+        
+        // Phase 6: Run Greeks Engine before Scoring
+        const e13 = await runGreeksEngine(symbol, optionChainData);
+
+        const e11 = runScoringEngine(symbol, {
+          pcr: { data_status: e3.data_status, score: e3.pcrOI, signal: e3.signal },
+          futures: {
+            data_status: e10.data_status, signal: e10.oiSignal,
+            basisPositive: e10.basis > 0, volumeRatio: e10.volumeRatio,
+            priceChangePositive: (optionChainData.strikes[0]?.CE.change || 0) > 0
+          },
+          sectors: {
+            data_status: e7.data_status,
+            topAvg: e7.topSectors.length > 0 ? e7.topSectors.reduce((s, sec) => s + sec.sectorScore, 0) / e7.topSectors.length : 50,
+            bottomAvg: e7.bottomSectors.length > 0 ? e7.bottomSectors.reduce((s, sec) => s + sec.sectorScore, 0) / e7.bottomSectors.length : 50,
+            bankLeading: e7.sectors.find(s => s.key === 'BANK')?.rrgQuadrant === 'LEADING'
+          },
+          breadth: { data_status: e6.data_status, score: e6.breadthScore },
+          volatility: { data_status: e5.data_status, vix, ivRankFalling: e5.ivRank < 50 }, // Approximation for ivRankFalling
+          technical: { data_status: e9.data_status, trendScore: e9.trendScore, momentumScore: e9.momentumScore },
+          institutional: { data_status: e8.data_status, signal: e8.signal },
+          greeks: { data_status: e13.data_status, gammaExposure: e13.gammaExposure, vanna: e13.vanna, signal: e13.signal },
+        });
+        const e12 = await runRegimeEngine(symbol, spotPrice, e9.ema20, e9.ema50, e9.ema200, vix, e10.volumeRatio);
+
 
         appState.setSymbolState(symbol, {
           spotPrice,
@@ -231,8 +277,9 @@ async function runDataCycle(): Promise<void> {
             institutional: { engine: 'institutional', signal: e8.signal, score: e8.smartMoneyIndex, result: e8, formulaBreakdown: e8.formulaBreakdown, timestamp: Date.now() },
             technical: { engine: 'technical', signal: e9.signal, score: (e9.trendScore + e9.momentumScore) / 2, result: e9, formulaBreakdown: e9.formulaBreakdown, timestamp: Date.now() },
             futures: { engine: 'futures', signal: e10.signal, score: 0, result: e10, formulaBreakdown: e10.formulaBreakdown, timestamp: Date.now() },
-            scoring: { engine: 'scoring', signal: e11.marketBias, score: e11.bullishScore, result: e11, formulaBreakdown: e11.formulaBreakdown, timestamp: Date.now() },
+            scoring: { engine: 'scoring', signal: e11.marketBias, score: e11.directionalBiasScore, result: e11, formulaBreakdown: e11.formulaBreakdown, timestamp: Date.now() },
             regime: { engine: 'regime', signal: e12.regime, score: 0, result: e12, formulaBreakdown: e12.formulaBreakdown, timestamp: Date.now() },
+            greeks: { engine: 'greeks', signal: e13.signal, score: 0, result: e13, formulaBreakdown: e13.formulaBreakdown, timestamp: Date.now() },
           },
           lastUpdated: Date.now(),
           marketStatus: indicesData.marketStatus,
@@ -253,7 +300,7 @@ async function runDataCycle(): Promise<void> {
         try {
           await insertDB(
             `INSERT INTO score_history (symbol, bullish_score, bearish_score, component_breakdown) VALUES ($1,$2,$3,$4)`,
-            [symbol, e11.bullishScore, e11.bearishScore, JSON.stringify(e11.components)]
+            [symbol, e11.directionalBiasScore, 100 - e11.directionalBiasScore, JSON.stringify(e11.components)]
           );
         } catch {}
 

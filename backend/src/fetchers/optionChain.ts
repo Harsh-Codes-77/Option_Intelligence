@@ -120,21 +120,19 @@ export async function fetchOptionChain(symbol: string): Promise<ParsedOptionChai
   }
 
   let raw: any;
-  let contractInfo: any;
   try {
     raw = await nseFetcher.nseIndia.getIndexOptionChain(symbol);
-    contractInfo = await nseFetcher.nseIndia.getIndexOptionChainContractInfo(symbol);
   } catch (err: any) {
     console.error(`[OptionChain] Fetch failed for ${symbol}:`, err.message);
     return null;
   }
 
   if (!raw || !raw.records || !raw.records.data) {
-    console.error(`[OptionChain] Invalid response for ${symbol}`);
+    console.error(`[OptionChain] Invalid response for ${symbol}:`, Object.keys(raw || {}), raw);
     return null;
   }
 
-  const expiryDates = contractInfo?.expiryDates || [];
+  const expiryDates = raw.records.expiryDates || [];
   const selectedExpiry = expiryDates[0] || '';
   const filteredData = raw.records.data || [];
   const firstStrike = filteredData.find((s: any) => s.CE || s.PE);

@@ -1,5 +1,6 @@
 import { SectorData } from '../fetchers/sectors';
 import { getCache, setCache } from '../config/redis';
+import { DataStatus } from '../store/state';
 
 export type RRGQuadrant = 'LEADING' | 'WEAKENING' | 'LAGGING' | 'IMPROVING';
 
@@ -19,6 +20,7 @@ export interface SectorAnalysis {
 }
 
 export interface SectorRotationResult {
+  data_status: DataStatus;
   sectors: SectorAnalysis[];
   topSectors: SectorAnalysis[];
   bottomSectors: SectorAnalysis[];
@@ -34,6 +36,16 @@ function classifyRRG(rsRatio: number, rsMomentum: number): RRGQuadrant {
 }
 
 export async function runSectorRotationEngine(sectorDataList: SectorData[]): Promise<SectorRotationResult> {
+  let data_status: DataStatus = 'LIVE';
+
+  if (!sectorDataList || sectorDataList.length === 0) {
+    data_status = 'WARMING_UP';
+    return {
+      data_status, sectors: [], topSectors: [], bottomSectors: [], signal: 'NEUTRAL',
+      formulaBreakdown: { title: 'Sector Rotation Analysis', steps: [{ label: 'Status', value: 'No data' }] },
+    };
+  }
+
   const analyses: SectorAnalysis[] = [];
 
   for (const sector of sectorDataList) {
@@ -65,7 +77,10 @@ export async function runSectorRotationEngine(sectorDataList: SectorData[]): Pro
 
     // Sector Breadth
     const totalStocks = sector.advances + sector.declines + sector.unchanged;
-    const sectorBreadth = totalStocks > 0 ? parseFloat(((sector.advances / totalStocks) * 100).toFixed(1)) : 50;
+    if (totalStocks === 0) {
+      data_status = 'WARMING_UP';
+    }
+    const sectorBreadth = totalStocks > 0 ? parseFloat(((sector.advances / totalStocks) * 100).toFixed(1)) : 0; // Removed default 50
 
     // Rate of Change
     const price5ago = updatedHistory.length >= 5 ? updatedHistory[updatedHistory.length - 5].price : sector.previousClose;
@@ -91,6 +106,13 @@ export async function runSectorRotationEngine(sectorDataList: SectorData[]): Pro
     });
   }
 
+  if (data_status === 'WARMING_UP') {
+    return {
+      data_status, sectors: [], topSectors: [], bottomSectors: [], signal: 'NEUTRAL',
+      formulaBreakdown: { title: 'Sector Rotation Analysis', steps: [{ label: 'Status', value: data_status === 'WARMING_UP' ? 'Warming Up...' : 'No Data' }] },
+    };
+  }
+
   // Sort by score
   analyses.sort((a, b) => b.sectorScore - a.sectorScore);
   const topSectors = analyses.slice(0, 3);
@@ -103,10 +125,11 @@ export async function runSectorRotationEngine(sectorDataList: SectorData[]): Pro
   else if (laggingCount > leadingCount + 2) signal = 'BROAD_WEAKNESS';
 
   return {
-    sectors: analyses, topSectors, bottomSectors, signal,
+    data_status, sectors: analyses, topSectors, bottomSectors, signal,
     formulaBreakdown: {
       title: 'Sector Rotation Analysis',
       steps: [
+        { label: 'Data Status', formula: 'Validating totals', value: data_status },
         { label: 'RS Ratio', formula: '(sector_price / sector_price_20d_ago) × 100', value: 'Per sector' },
         { label: 'RS Momentum', formula: 'RS_Ratio_today - RS_Ratio_10d_ago', value: 'Per sector' },
         { label: 'RRG Quadrant', formula: 'RS>100+Mom>0=Leading | RS>100+Mom<0=Weakening | RS<100+Mom<0=Lagging | RS<100+Mom>0=Improving', value: `${leadingCount} Leading, ${laggingCount} Lagging` },

@@ -48,7 +48,14 @@ export async function fetchIndices(): Promise<IndicesResponse> {
     allIndices: [],
   };
 
-  const data = await nseFetcher.fetch<any>(ALL_INDICES_URL);
+  let data;
+  try {
+    data = await nseFetcher.nseIndia.getAllIndices();
+  } catch (err) {
+    console.warn('[Indices] fetch failed:', err);
+    return result;
+  }
+  
   if (!data || !data.data) return result;
 
   const indices = data.data as any[];
@@ -73,7 +80,7 @@ export async function fetchIndices(): Promise<IndicesResponse> {
   }
 
   // Fetch market status
-  const statusData = await nseFetcher.fetch<any>(MARKET_STATUS_URL);
+  const statusData = await nseFetcher.nseIndia.getMarketStatus();
   if (statusData && statusData.marketState) {
     const states = Array.isArray(statusData.marketState) ? statusData.marketState : [statusData.marketState];
     for (const s of states) {
@@ -96,8 +103,7 @@ export async function fetchIndices(): Promise<IndicesResponse> {
 }
 
 export async function fetchIndexData(indexName: string): Promise<IndexData | null> {
-  const url = `https://www.nseindia.com/api/equity-stockIndices?index=${encodeURIComponent(indexName)}`;
-  const data = await nseFetcher.fetch<any>(url);
+  const data = await nseFetcher.nseIndia.getEquityStockIndices(indexName);
 
   if (!data || !data.data || data.data.length === 0) return null;
 

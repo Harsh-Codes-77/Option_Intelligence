@@ -57,6 +57,30 @@ router.get('/regime/:symbol', async (req: Request, res: Response) => {
   res.json({ data: regime.result, cached: false });
 });
 
+// GET /api/greeks/health/:symbol - Health check for Greeks engine
+router.get('/greeks/health/:symbol', async (req: Request, res: Response) => {
+  const { symbol } = req.params;
+  let greeks = appState.getEngineOutput(symbol.toUpperCase(), 'greeks');
+  
+  if (!greeks) {
+    const cached = await getCache(`engine:greeks:${symbol.toUpperCase()}`);
+    if (cached) {
+      greeks = { result: cached } as any;
+    } else {
+      return res.status(404).json({ status: 'error', error: 'No greeks data' });
+    }
+  }
+
+  const result = greeks?.result;
+  const isHealthy = result && result.gammaExposure !== 0 && result.gammaExposure !== null && !isNaN(result.gammaExposure);
+
+  res.json({
+    status: isHealthy ? 'healthy' : 'warming_up',
+    data: result,
+    cached: !appState.getEngineOutput(symbol.toUpperCase(), 'greeks')
+  });
+});
+
 // GET /api/health - Health check
 router.get('/health', (_req: Request, res: Response) => {
   const symbols = appState.getAllSymbolStates();

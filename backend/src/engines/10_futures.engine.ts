@@ -1,9 +1,11 @@
 import { ParsedOptionChain } from '../fetchers/optionChain';
 import { getCache, setCache } from '../config/redis';
+import { DataStatus } from '../store/state';
 
 export type FuturesSignal = 'LONG_BUILDUP' | 'SHORT_BUILDUP' | 'SHORT_COVERING' | 'LONG_UNWINDING' | 'NEUTRAL';
 
 export interface FuturesEngineResult {
+  data_status: DataStatus;
   symbol: string;
   futuresPrice: number;
   spotPrice: number;
@@ -31,8 +33,13 @@ export async function runFuturesEngine(symbol: string, data: ParsedOptionChain):
   const futuresOI = futuresCache?.oi || 0;
   const futuresVolume = futuresCache?.volume || 0;
 
+  let data_status: DataStatus = 'LIVE';
+  if (!futuresCache || futuresVolume === 0) {
+    data_status = 'NO_DATA';
+  }
+
   // Days to expiry from option chain
-  const expiryDate = data.expiryDates[0];
+  const expiryDate = data.expiryDates && data.expiryDates.length > 0 ? data.expiryDates[0] : '';
   let daysToExpiry = 7;
   if (expiryDate) {
     const exp = new Date(expiryDate);
@@ -50,6 +57,15 @@ export async function runFuturesEngine(symbol: string, data: ParsedOptionChain):
   const costOfCarry = daysToExpiry > 0 && spotPrice > 0
     ? parseFloat(((basis / spotPrice / (daysToExpiry / 365)) * 100).toFixed(2))
     : 0;
+
+  if (data_status === 'NO_DATA') {
+    return {
+      data_status, symbol, futuresPrice, spotPrice, basis, basisPct, basisInterpretation,
+      costOfCarry, theoreticalFutures, oiSignal: 'NEUTRAL', rolloverPct: 100,
+      volumeRatio: 1, volumeSignal: 'NORMAL', premiumDecayRate: 0, daysToExpiry, signal: 'NEUTRAL',
+      formulaBreakdown: { title: 'Futures Analysis', steps: [{ label: 'Status', value: 'No Data (Using Spot Fallback)' }] }
+    };
+  }
 
   // Previous values for OI signal
   const prevFuturesKey = `futures:prev:${symbol}`;
@@ -90,19 +106,21 @@ export async function runFuturesEngine(symbol: string, data: ParsedOptionChain):
     oiSignal === 'LONG_UNWINDING' ? 'MILDLY_BEARISH' : 'NEUTRAL';
 
   return {
+    data_status,
     symbol, futuresPrice, spotPrice, basis, basisPct, basisInterpretation,
     costOfCarry, theoreticalFutures, oiSignal, rolloverPct,
     volumeRatio, volumeSignal, premiumDecayRate, daysToExpiry, signal,
     formulaBreakdown: {
       title: 'Futures Analysis',
       steps: [
-        { label: 'Basis', formula: `Futures (${futuresPrice}) - Spot (${spotPrice})`, value: `${basis} (${basisPct}%)` },
-        { label: 'Interpretation', formula: 'Basis>0=Contango | <0=Backwardation', value: basisInterpretation },
-        { label: 'Theoretical Price', formula: `Spot × e^(6.5% × ${daysToExpiry}/365)`, value: theoreticalFutures },
-        { label: 'Cost of Carry', formula: `(Basis / Spot / DTE_years) × 100`, value: `${costOfCarry}%` },
-        { label: 'OI Signal', formula: `Price ${priceChange >= 0 ? '↑' : '↓'} + OI ${oiChange >= 0 ? '↑' : '↓'}`, value: oiSignal },
-        { label: 'Volume Ratio', formula: `Today Vol / 20-day avg`, value: `${volumeRatio}x` },
-        { label: 'Days to Expiry', formula: `Nearest expiry: ${expiryDate || 'N/A'}`, value: daysToExpiry },
+        { step: 0, label: 'Data Status', formula: 'Checking futures connectivity', value: data_status },
+        { step: 1, label: 'Basis', formula: `Futures (${futuresPrice}) - Spot (${spotPrice})`, value: `${basis} (${basisPct}%)` },
+        { step: 2, label: 'Interpretation', formula: 'Basis>0=Contango | <0=Backwardation', value: basisInterpretation },
+        { step: 3, label: 'Theoretical Price', formula: `Spot × e^(6.5% × ${daysToExpiry}/365)`, value: theoreticalFutures },
+        { step: 4, label: 'Cost of Carry', formula: `(Basis / Spot / DTE_years) × 100`, value: `${costOfCarry}%` },
+        { step: 5, label: 'OI Signal', formula: `Price ${priceChange >= 0 ? '↑' : '↓'} + OI ${oiChange >= 0 ? '↑' : '↓'}`, value: oiSignal },
+        { step: 6, label: 'Volume Ratio', formula: `Today Vol / 20-day avg`, value: `${volumeRatio}x` },
+        { step: 7, label: 'Days to Expiry', formula: `Nearest expiry: ${expiryDate || 'N/A'}`, value: daysToExpiry },
       ],
     },
   };

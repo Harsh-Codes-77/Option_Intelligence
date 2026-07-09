@@ -1,6 +1,6 @@
 import { Header } from './components/layout/Header';
 import { FormulaModal } from './components/shared/FormulaModal';
-import { MarketBiasCard, RegimeCard, SupportResistanceCard, ScoringCard, PCRCard, MaxPainCard, VolatilityCard, BreadthCard, FuturesCard, InstitutionalCard, TechnicalCard, SectorHeatmap, TimelinePanel } from './components/dashboard/Panels';
+import { MarketBiasCard, RegimeCard, SupportResistanceCard, ScoringCard, PCRCard, MaxPainCard, VolatilityCard, BreadthCard, FuturesCard, InstitutionalCard, TechnicalCard, SectorHeatmap, TimelinePanel, GreeksCard } from './components/dashboard/Panels';
 import { useWebSocket } from './hooks/useWebSocket';
 import { useDashboardStore } from './store/dashboardStore';
 
@@ -45,11 +45,12 @@ function App() {
           <SupportResistanceCard />
         </div>
 
-        {/* Second Row: PCR + Max Pain + Volatility + Futures */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+        {/* Second Row: PCR + Max Pain + Volatility + Greeks + Futures */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-3">
           <PCRCard />
           <MaxPainCard />
           <VolatilityCard />
+          <GreeksCard />
           <FuturesCard />
         </div>
 

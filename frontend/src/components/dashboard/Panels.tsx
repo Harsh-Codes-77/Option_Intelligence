@@ -1,5 +1,6 @@
 import { useDashboardStore } from '../../store/dashboardStore';
 import { SignalBadge } from '../shared/SignalBadge';
+import { DataStatusBadge } from '../shared/DataStatusBadge';
 
 export function MarketBiasCard() {
   const { activeSymbol, symbols, openFormulaModal } = useDashboardStore();
@@ -7,8 +8,8 @@ export function MarketBiasCard() {
   const scoring = state?.engines?.scoring;
   if (!scoring?.result) return <EmptyCard title="MARKET BIAS" />;
 
-  const { bullishScore, bearishScore, marketBias, components } = scoring.result;
-  const isBullish = bullishScore >= 50;
+  const { directionalBiasScore, optionBuyingEdgeScore, marketBias, components, data_status } = scoring.result;
+  const isBullish = directionalBiasScore >= 50;
 
   return (
     <div
@@ -17,27 +18,29 @@ export function MarketBiasCard() {
     >
       <div className="card-header">
         <span className="card-title">Market Bias</span>
-        <SignalBadge signal={marketBias} size="md" />
-      </div>
-      <div className="text-center py-2">
-        <div className={`text-3xl font-black ${isBullish ? 'text-[var(--color-bullish)]' : 'text-[var(--color-bearish)]'}`}>
-          {bullishScore?.toFixed(1)}
+        <div className="flex items-center gap-2">
+          <SignalBadge signal={marketBias} size="md" />
+          <DataStatusBadge status={data_status} />
         </div>
-        <div className="text-xs text-[var(--color-text-muted)] mt-1">Bullish Score / 100</div>
       </div>
-      {/* Progress bar */}
-      <div className="h-2 bg-[var(--color-bg)] rounded-full overflow-hidden mt-2">
-        <div className="h-full rounded-full transition-all duration-700" style={{
-          width: `${bullishScore}%`,
-          background: `linear-gradient(90deg, var(--color-bearish), var(--color-neutral), var(--color-bullish))`,
-        }} />
-      </div>
-      <div className="flex justify-between mt-1 text-[10px] text-[var(--color-text-muted)]">
-        <span>Bear {bearishScore?.toFixed(1)}</span>
-        <span>Bull {bullishScore?.toFixed(1)}</span>
+      <div className="grid grid-cols-2 gap-4 mt-2">
+        <div className="text-center py-2 border-r border-[var(--color-border)]/30">
+          <div className="text-xs text-[var(--color-text-muted)] mb-1">Directional Bias</div>
+          <div className={`text-3xl font-black ${isBullish ? 'text-[var(--color-bullish)]' : 'text-[var(--color-bearish)]'}`}>
+            {directionalBiasScore?.toFixed(1)}
+          </div>
+          <div className="text-[10px] text-[var(--color-text-muted)] mt-1">/ 100</div>
+        </div>
+        <div className="text-center py-2">
+          <div className="text-xs text-[var(--color-text-muted)] mb-1">Option Buying Edge</div>
+          <div className={`text-3xl font-black ${optionBuyingEdgeScore >= 60 ? 'text-[var(--color-bullish)]' : optionBuyingEdgeScore <= 40 ? 'text-[var(--color-bearish)]' : 'text-[var(--color-neutral)]'}`}>
+            {optionBuyingEdgeScore?.toFixed(1)}
+          </div>
+          <div className="text-[10px] text-[var(--color-text-muted)] mt-1">/ 100</div>
+        </div>
       </div>
       {/* Component pills */}
-      <div className="flex flex-wrap gap-1 mt-3">
+      <div className="flex flex-wrap gap-1 mt-3 justify-center">
         {components?.slice(0, 4).map((c: any) => (
           <span key={c.name} className={`text-[9px] px-1.5 py-0.5 rounded-full ${c.normalizedScore >= 60 ? 'bg-[var(--color-bullish)]/10 text-[var(--color-bullish)]' : c.normalizedScore <= 40 ? 'bg-[var(--color-bearish)]/10 text-[var(--color-bearish)]' : 'bg-[var(--color-neutral)]/10 text-[var(--color-neutral)]'}`}>
             {c.name}: {c.normalizedScore?.toFixed(0)}
@@ -67,7 +70,10 @@ export function RegimeCard() {
   return (
     <div className="card cursor-pointer" onClick={() => openFormulaModal(regime.formulaBreakdown)}>
       <div className="card-header">
-        <span className="card-title">Market Regime</span>
+        <div className="flex items-center gap-2">
+          <span className="card-title">Market Regime</span>
+          <DataStatusBadge status={regime.result.data_status} />
+        </div>
       </div>
       <div className={`text-xl font-black text-center py-2 ${regimeColors[regimeType] || 'text-[var(--color-text)]'}`}>
         {regimeType?.replace(/_/g, ' ')}
@@ -92,7 +98,10 @@ export function SupportResistanceCard() {
   return (
     <div className="card cursor-pointer" onClick={() => openFormulaModal(sd.formulaBreakdown)}>
       <div className="card-header">
-        <span className="card-title">Support / Resistance</span>
+        <div className="flex items-center gap-2">
+          <span className="card-title">Support / Resistance</span>
+          <DataStatusBadge status={sd.result.data_status} />
+        </div>
         <span className="text-xs text-[var(--color-text-muted)]">Spot: {spotPrice?.toLocaleString()}</span>
       </div>
       <div className="space-y-1.5">
@@ -135,7 +144,10 @@ export function ScoringCard() {
   return (
     <div className="card cursor-pointer" onClick={() => openFormulaModal(scoring.formulaBreakdown)}>
       <div className="card-header">
-        <span className="card-title">Scoring Breakdown</span>
+        <div className="flex items-center gap-2">
+          <span className="card-title">Scoring Breakdown</span>
+          <DataStatusBadge status={scoring.result.data_status} />
+        </div>
       </div>
       <div className="space-y-2">
         {components?.map((c: any) => (
@@ -171,7 +183,10 @@ export function PCRCard() {
     <div className="card cursor-pointer" onClick={() => openFormulaModal(pcr.formulaBreakdown)}>
       <div className="card-header">
         <span className="card-title">Put/Call Ratio</span>
-        <SignalBadge signal={signal} />
+        <div className="flex items-center gap-2">
+          <SignalBadge signal={signal} />
+          <DataStatusBadge status={pcr.result.data_status} />
+        </div>
       </div>
       <div className="text-center py-2">
         <div className="text-3xl font-black">{pcrOI?.toFixed(2)}</div>
@@ -191,15 +206,23 @@ export function MaxPainCard() {
   const mp = state?.engines?.maxPain;
   if (!mp?.result) return <EmptyCard title="MAX PAIN" />;
 
-  const { maxPainStrike, spotPrice, distancePct, signal } = mp.result;
+  const { maxPainStrike, spotPrice, distancePct, signal, isPinningRisk, data_status } = mp.result;
 
   return (
     <div className="card cursor-pointer" onClick={() => openFormulaModal(mp.formulaBreakdown)}>
       <div className="card-header">
         <span className="card-title">Max Pain</span>
-        <SignalBadge signal={signal} />
+        <div className="flex items-center gap-2">
+          <SignalBadge signal={signal} />
+          <DataStatusBadge status={data_status} />
+        </div>
       </div>
-      <div className="text-center py-2">
+      <div className="text-center py-2 relative">
+        {isPinningRisk && (
+          <div className="absolute top-0 right-0 animate-pulse bg-[var(--color-warning)]/20 text-[var(--color-warning)] text-[9px] px-1.5 py-0.5 rounded-full border border-[var(--color-warning)]/50">
+            PINNING RISK
+          </div>
+        )}
         <div className="text-2xl font-black">{maxPainStrike?.toLocaleString()}</div>
         <div className="text-xs text-[var(--color-text-muted)] mt-1">
           {distancePct > 0 ? '+' : ''}{distancePct}% from spot ({spotPrice?.toLocaleString()})
@@ -215,22 +238,32 @@ export function VolatilityCard() {
   const vol = state?.engines?.volatility;
   if (!vol?.result) return <EmptyCard title="VOLATILITY" />;
 
-  const { vix, vixClassification, atmIV, ivRank, strategyRecommendation, ivSkewType } = vol.result;
+  const { vix, vixClassification, atmIV, ivRank, strategyRecommendation, hv10, termStructure, ivDivergence, expectedMoveValue, expectedMovePct, data_status } = vol.result;
 
   return (
     <div className="card cursor-pointer" onClick={() => openFormulaModal(vol.formulaBreakdown)}>
       <div className="card-header">
         <span className="card-title">Volatility</span>
-        <SignalBadge signal={vixClassification} />
+        <div className="flex items-center gap-2">
+          <SignalBadge signal={vixClassification} />
+          <DataStatusBadge status={data_status} />
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-3 mt-1">
-        <div><div className="text-[10px] text-[var(--color-text-muted)]">VIX</div><div className="text-lg font-bold">{vix?.toFixed(2)}</div></div>
-        <div><div className="text-[10px] text-[var(--color-text-muted)]">ATM IV</div><div className="text-lg font-bold">{atmIV?.toFixed(1)}</div></div>
-        <div><div className="text-[10px] text-[var(--color-text-muted)]">IV Rank</div><div className="text-sm font-semibold">{ivRank?.toFixed(0)}%</div></div>
-        <div><div className="text-[10px] text-[var(--color-text-muted)]">Skew</div><div className="text-sm font-semibold">{ivSkewType?.replace(/_/g, ' ')}</div></div>
+        <div><div className="text-[10px] text-[var(--color-text-muted)]">VIX / IVR</div><div className="text-sm font-bold">{vix?.toFixed(2)} / {ivRank?.toFixed(0)}%</div></div>
+        <div><div className="text-[10px] text-[var(--color-text-muted)]">ATM IV / HV10</div><div className="text-sm font-bold">{atmIV?.toFixed(1)} / {hv10?.toFixed(1)}</div></div>
+        <div>
+          <div className="text-[10px] text-[var(--color-text-muted)]">Term Struct</div>
+          <div className={`text-xs font-semibold ${termStructure === 'BACKWARDATION' ? 'text-[var(--color-bearish)]' : 'text-[var(--color-bullish)]'}`}>{termStructure?.replace(/_/g, ' ')}</div>
+        </div>
+        <div>
+          <div className="text-[10px] text-[var(--color-text-muted)]">Expected Move</div>
+          <div className="text-xs font-semibold text-[var(--color-accent)]">±{expectedMoveValue?.toFixed(0)} ({expectedMovePct?.toFixed(1)}%)</div>
+        </div>
       </div>
-      <div className="mt-2 text-center">
-        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)]">{strategyRecommendation?.replace(/_/g, ' ')}</span>
+      <div className="mt-2 text-center flex flex-wrap gap-1 justify-center">
+        <span className="text-[9px] px-2 py-0.5 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)]">{strategyRecommendation?.replace(/_/g, ' ')}</span>
+        {ivDivergence && <span className="text-[9px] px-2 py-0.5 rounded-full bg-[var(--color-warning)]/10 text-[var(--color-warning)] animate-pulse border border-[var(--color-warning)]/30">IV DIVERGENCE</span>}
       </div>
     </div>
   );
@@ -248,7 +281,10 @@ export function BreadthCard() {
     <div className="card cursor-pointer" onClick={() => openFormulaModal(b.formulaBreakdown)}>
       <div className="card-header">
         <span className="card-title">Market Breadth</span>
-        <SignalBadge signal={marketHealth} />
+        <div className="flex items-center gap-2">
+          <SignalBadge signal={marketHealth} />
+          <DataStatusBadge status={b.result.data_status} />
+        </div>
       </div>
       <div className="grid grid-cols-3 gap-2 mt-1 text-center">
         <div><div className="text-[10px] text-[var(--color-text-muted)]">Advances</div><div className="text-sm font-bold text-[var(--color-bullish)]">{advancing}</div></div>
@@ -275,7 +311,10 @@ export function FuturesCard() {
     <div className="card cursor-pointer" onClick={() => openFormulaModal(f.formulaBreakdown)}>
       <div className="card-header">
         <span className="card-title">Futures</span>
-        <SignalBadge signal={oiSignal} />
+        <div className="flex items-center gap-2">
+          <SignalBadge signal={oiSignal} />
+          <DataStatusBadge status={f.result.data_status} />
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-3 mt-1">
         <div><div className="text-[10px] text-[var(--color-text-muted)]">Basis</div><div className={`text-lg font-bold ${basis >= 0 ? 'text-[var(--color-bullish)]' : 'text-[var(--color-bearish)]'}`}>{basis?.toFixed(1)} ({basisPct?.toFixed(2)}%)</div></div>
@@ -299,7 +338,10 @@ export function InstitutionalCard() {
     <div className="card cursor-pointer" onClick={() => openFormulaModal(inst.formulaBreakdown)}>
       <div className="card-header">
         <span className="card-title">Institutional Flow</span>
-        <SignalBadge signal={signal} />
+        <div className="flex items-center gap-2">
+          <SignalBadge signal={signal} />
+          <DataStatusBadge status={inst.result.data_status} />
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-3 mt-1">
         <div>
@@ -328,7 +370,10 @@ export function TechnicalCard() {
     <div className="card cursor-pointer" onClick={() => openFormulaModal(tech.formulaBreakdown)}>
       <div className="card-header">
         <span className="card-title">Technical</span>
-        <SignalBadge signal={tech.signal} />
+        <div className="flex items-center gap-2">
+          <SignalBadge signal={tech.signal} />
+          <DataStatusBadge status={tech.result.data_status} />
+        </div>
       </div>
       <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
         <div><div className="text-[10px] text-[var(--color-text-muted)]">EMA20</div><div className="font-semibold">{ema20?.toFixed(0)}</div></div>
@@ -365,7 +410,10 @@ export function SectorHeatmap() {
     <div className="card cursor-pointer" onClick={() => sectorEngine && openFormulaModal(sectorEngine.formulaBreakdown)}>
       <div className="card-header">
         <span className="card-title">Sector Rotation</span>
-        {sectorEngine && <SignalBadge signal={sectorEngine.signal} />}
+        <div className="flex items-center gap-2">
+          {sectorEngine && <SignalBadge signal={sectorEngine.signal} />}
+          {sectorEngine && <DataStatusBadge status={sectorEngine.result.data_status} />}
+        </div>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
         {sectorData.map((s: any) => (
@@ -407,6 +455,57 @@ export function TimelinePanel() {
             </span>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+export function GreeksCard() {
+  const { activeSymbol, symbols, openFormulaModal } = useDashboardStore();
+  const state = symbols[activeSymbol];
+  const greeks = state?.engines?.greeks;
+  if (!greeks?.result) return <EmptyCard title="PASSARELLI GREEKS" />;
+
+  const { gammaExposure, vanna, charm, deltaProbability } = greeks.result;
+
+  return (
+    <div className="card cursor-pointer" onClick={() => openFormulaModal(greeks.formulaBreakdown)}>
+      <div className="card-header">
+        <span className="card-title">Passarelli Greeks</span>
+        <div className="flex items-center gap-2">
+          <SignalBadge signal={greeks.signal} />
+          <DataStatusBadge status={greeks.result.data_status} />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-y-3 mt-2">
+        <div>
+          <div className="text-[10px] text-[var(--color-text-muted)]">Net GEX</div>
+          <div className={`text-sm font-bold ${gammaExposure > 0 ? 'text-[var(--color-neutral)]' : 'text-[var(--color-warning)]'}`}>
+            {gammaExposure > 1e7 || gammaExposure < -1e7 
+              ? `${(gammaExposure / 1e7).toFixed(2)} Cr` 
+              : `${(gammaExposure / 1e5).toFixed(2)} L`}
+          </div>
+        </div>
+        <div>
+          <div className="text-[10px] text-[var(--color-text-muted)]">Net Vanna</div>
+          <div className="text-sm font-bold text-[var(--color-text)]">
+            {vanna > 1e7 || vanna < -1e7 
+              ? `${(vanna / 1e7).toFixed(2)} Cr` 
+              : `${(vanna / 1e5).toFixed(2)} L`}
+          </div>
+        </div>
+        <div>
+          <div className="text-[10px] text-[var(--color-text-muted)]">Net Charm</div>
+          <div className="text-sm font-bold text-[var(--color-text)]">
+            {charm?.toFixed(2)}
+          </div>
+        </div>
+        <div>
+          <div className="text-[10px] text-[var(--color-text-muted)]">ATM Probability</div>
+          <div className="text-sm font-bold text-[var(--color-text)]">
+            {deltaProbability}%
+          </div>
+        </div>
       </div>
     </div>
   );
