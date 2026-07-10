@@ -21,10 +21,19 @@ redis.on('error', (err) => {
   console.error('[Redis] Connection error:', err.message);
 });
 
+// Helper: Timeout wrapper
+const withTimeout = <T>(promise: Promise<T>, ms: number = 2000): Promise<T> => {
+  let timer: NodeJS.Timeout;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error('Redis operation timed out')), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+};
+
 // Helper: Get JSON from Redis
 export async function getCache<T = any>(key: string): Promise<T | null> {
   try {
-    const data = await redis.get(key);
+    const data = await withTimeout(redis.get(key));
     if (!data) return null;
     return JSON.parse(data) as T;
   } catch {
@@ -35,7 +44,7 @@ export async function getCache<T = any>(key: string): Promise<T | null> {
 // Helper: Set JSON in Redis with TTL (seconds)
 export async function setCache(key: string, value: any, ttlSeconds: number = 120): Promise<void> {
   try {
-    await redis.set(key, JSON.stringify(value), 'EX', ttlSeconds);
+    await withTimeout(redis.set(key, JSON.stringify(value), 'EX', ttlSeconds));
   } catch (err: any) {
     console.error(`[Redis] Failed to set key ${key}:`, err.message);
   }
@@ -44,8 +53,8 @@ export async function setCache(key: string, value: any, ttlSeconds: number = 120
 // Helper: Push to a Redis list (with max length trimming)
 export async function pushToList(key: string, value: any, maxLength: number = 200): Promise<void> {
   try {
-    await redis.lpush(key, JSON.stringify(value));
-    await redis.ltrim(key, 0, maxLength - 1);
+    await withTimeout(redis.lpush(key, JSON.stringify(value)));
+    await withTimeout(redis.ltrim(key, 0, maxLength - 1));
   } catch (err: any) {
     console.error(`[Redis] Failed to push to list ${key}:`, err.message);
   }
@@ -54,7 +63,7 @@ export async function pushToList(key: string, value: any, maxLength: number = 20
 // Helper: Get list from Redis
 export async function getList<T = any>(key: string, start: number = 0, stop: number = -1): Promise<T[]> {
   try {
-    const items = await redis.lrange(key, start, stop);
+    const items = await withTimeout(redis.lrange(key, start, stop));
     return items.map((item) => JSON.parse(item) as T);
   } catch {
     return [];
@@ -63,7 +72,7 @@ export async function getList<T = any>(key: string, start: number = 0, stop: num
 
 export async function testRedisConnection(): Promise<boolean> {
   try {
-    await redis.ping();
+    await withTimeout(redis.ping(), 3000);
     console.log('[Redis] Ping successful');
     return true;
   } catch (err: any) {

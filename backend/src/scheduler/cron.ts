@@ -115,15 +115,22 @@ async function runDataCycle(): Promise<void> {
     if (cycleCount === 1) {
       for (const symbol of SYMBOLS) {
         if (!appState.getSymbolState(symbol)) {
-          const emptyState = {
-            spotPrice: 0, futuresPrice: 0, vix: 0, change: 0, changePct: 0,
-            dayHigh: 0, dayLow: 0, dayOpen: 0, volume: 0, previousClose: 0,
-            engines: {},
-            lastUpdated: Date.now(),
-            marketStatus: 'CLOSED' as 'CLOSED',
-          };
-          appState.setSymbolState(symbol, emptyState);
-          broadcaster.broadcast('update', { symbol, ...emptyState }, symbol);
+          const cachedState = await getCache(`live:${symbol}`);
+          if (cachedState) {
+            console.log(`[Scheduler] Cycle 1: Restored ${symbol} state from Redis fallback`);
+            appState.setSymbolState(symbol, cachedState);
+            broadcaster.broadcast('update', { symbol, ...cachedState }, symbol);
+          } else {
+            const emptyState = {
+              spotPrice: 0, futuresPrice: 0, vix: 0, change: 0, changePct: 0,
+              dayHigh: 0, dayLow: 0, dayOpen: 0, volume: 0, previousClose: 0,
+              engines: {},
+              lastUpdated: Date.now(),
+              marketStatus: 'CLOSED' as 'CLOSED',
+            };
+            appState.setSymbolState(symbol, emptyState);
+            broadcaster.broadcast('update', { symbol, ...emptyState }, symbol);
+          }
         }
       }
     }
@@ -177,19 +184,26 @@ async function runDataCycle(): Promise<void> {
         await nseFetcher.rateLimitDelay();
 
         if (!optionChainData) {
-          console.warn(`[Scheduler] No data for ${symbol}, skipping processing but initializing default state`);
+          console.warn(`[Scheduler] No data for ${symbol}, skipping processing. Falling back to cache or default state.`);
           
-          // Ensure we at least broadcast a default state so the frontend doesn't hang forever
-          if (!appState.getSymbolState(symbol)) {
-            const emptyState = {
-              spotPrice: 0, futuresPrice: 0, vix: 0, change: 0, changePct: 0,
-              dayHigh: 0, dayLow: 0, dayOpen: 0, volume: 0, previousClose: 0,
-              engines: {},
-              lastUpdated: Date.now(),
-              marketStatus: 'CLOSED' as 'CLOSED',
-            };
-            appState.setSymbolState(symbol, emptyState);
-            broadcaster.broadcast('update', { symbol, ...emptyState }, symbol);
+          const currentState = appState.getSymbolState(symbol);
+          if (!currentState || Object.keys(currentState.engines).length === 0) {
+            const cachedState = await getCache(`live:${symbol}`);
+            if (cachedState) {
+              console.log(`[Scheduler] Restored ${symbol} state from Redis fallback`);
+              appState.setSymbolState(symbol, cachedState);
+              broadcaster.broadcast('update', { symbol, ...cachedState }, symbol);
+            } else {
+              const emptyState = {
+                spotPrice: 0, futuresPrice: 0, vix: 0, change: 0, changePct: 0,
+                dayHigh: 0, dayLow: 0, dayOpen: 0, volume: 0, previousClose: 0,
+                engines: {},
+                lastUpdated: Date.now(),
+                marketStatus: 'CLOSED' as 'CLOSED',
+              };
+              appState.setSymbolState(symbol, emptyState);
+              broadcaster.broadcast('update', { symbol, ...emptyState }, symbol);
+            }
           }
           
           continue;
