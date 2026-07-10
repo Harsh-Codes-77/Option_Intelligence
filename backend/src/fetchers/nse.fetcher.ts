@@ -33,6 +33,33 @@ class NSEFetcher {
   async rateLimitDelay(): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, 500));
   }
+  async getIndexOptionChain(symbol: string, retries = 3) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try { return await this.nseIndia.getIndexOptionChain(symbol); }
+      catch (err: any) { if (attempt === retries) throw err; await this.rateLimitDelay(); }
+    }
+  }
+
+  async getAllIndices(retries = 3) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try { return await this.nseIndia.getAllIndices(); }
+      catch (err: any) { if (attempt === retries) throw err; await this.rateLimitDelay(); }
+    }
+  }
+
+  async getEquityStockIndices(symbol: string, retries = 3) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try { return await this.nseIndia.getEquityStockIndices(symbol); }
+      catch (err: any) { if (attempt === retries) throw err; await this.rateLimitDelay(); }
+    }
+  }
+
+  async getMarketStatus(retries = 3) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try { return await this.nseIndia.getMarketStatus(); }
+      catch (err: any) { if (attempt === retries) throw err; await this.rateLimitDelay(); }
+    }
+  }
 }
 
 export const nseFetcher = new NSEFetcher();

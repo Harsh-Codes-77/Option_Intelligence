@@ -67,7 +67,7 @@ export async function fetchAllSectors(): Promise<SectorData[]> {
 
   let data;
   try {
-    data = await nseFetcher.nseIndia.getAllIndices();
+    data = await nseFetcher.getAllIndices();
   } catch (err: any) {
     console.warn(`[Sectors] Fetch failed:`, err.message);
     return sectors;

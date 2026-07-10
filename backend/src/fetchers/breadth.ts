@@ -14,7 +14,7 @@ const NIFTY_500_URL = 'https://www.nseindia.com/api/equity-stockIndices?index=NI
 export async function fetchBreadthData(): Promise<BreadthData | null> {
   let data;
   try {
-    data = await nseFetcher.nseIndia.getAllIndices();
+    data = await nseFetcher.getAllIndices();
   } catch (err: any) {
     console.warn(`[Breadth] Fetch failed for NIFTY 500:`, err.message);
     return null;

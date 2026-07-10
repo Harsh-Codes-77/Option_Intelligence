@@ -121,7 +121,7 @@ export async function fetchOptionChain(symbol: string): Promise<ParsedOptionChai
 
   let raw: any;
   try {
-    raw = await nseFetcher.nseIndia.getIndexOptionChain(symbol);
+    raw = await nseFetcher.getIndexOptionChain(symbol);
   } catch (err: any) {
     console.error(`[OptionChain] Fetch failed for ${symbol}:`, err.message);
     return null;
@@ -134,7 +134,7 @@ export async function fetchOptionChain(symbol: string): Promise<ParsedOptionChai
 
   const expiryDates = raw.records.expiryDates || [];
   const selectedExpiry = expiryDates[0] || '';
-  const filteredData = raw.records.data || [];
+  const filteredData = raw.filtered?.data || raw.records?.data || [];
   const firstStrike = filteredData.find((s: any) => s.CE || s.PE);
   const spotPrice = firstStrike?.CE?.underlyingValue || firstStrike?.PE?.underlyingValue || 0;
 

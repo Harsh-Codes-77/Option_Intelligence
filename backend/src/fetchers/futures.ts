@@ -21,13 +21,13 @@ export async function fetchFuturesData(symbol: string): Promise<FuturesData | nu
     // from the option chain or equity indices endpoint.
     let spotPrice = 0;
     try {
-      const ocData = await nseFetcher.nseIndia.getIndexOptionChain(symbol);
+      const ocData = await nseFetcher.getIndexOptionChain(symbol);
       if (ocData && ocData.records && ocData.records.underlyingValue) {
         spotPrice = ocData.records.underlyingValue;
       }
     } catch (err) {
       // fallback to getEquityStockIndices
-      const indexData = await nseFetcher.nseIndia.getEquityStockIndices(symbol);
+      const indexData = await nseFetcher.getEquityStockIndices(symbol);
       if (indexData && indexData.data && indexData.data.length > 0) {
         spotPrice = indexData.data[0].lastPrice || (indexData.data[0] as any).last || 0;
       }

@@ -50,7 +50,7 @@ export async function fetchIndices(): Promise<IndicesResponse> {
 
   let data;
   try {
-    data = await nseFetcher.nseIndia.getAllIndices();
+    data = await nseFetcher.getAllIndices();
   } catch (err) {
     console.warn('[Indices] fetch failed:', err);
     return result;
@@ -80,7 +80,7 @@ export async function fetchIndices(): Promise<IndicesResponse> {
   }
 
   // Fetch market status
-  const statusData = await nseFetcher.nseIndia.getMarketStatus();
+  const statusData = await nseFetcher.getMarketStatus();
   if (statusData && statusData.marketState) {
     const states = Array.isArray(statusData.marketState) ? statusData.marketState : [statusData.marketState];
     for (const s of states) {
@@ -103,7 +103,7 @@ export async function fetchIndices(): Promise<IndicesResponse> {
 }
 
 export async function fetchIndexData(indexName: string): Promise<IndexData | null> {
-  const data = await nseFetcher.nseIndia.getEquityStockIndices(indexName);
+  const data = await nseFetcher.getEquityStockIndices(indexName);
 
   if (!data || !data.data || data.data.length === 0) return null;
 
