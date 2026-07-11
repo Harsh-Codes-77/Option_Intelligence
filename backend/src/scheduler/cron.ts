@@ -350,18 +350,23 @@ export function startScheduler(): void {
   // Run immediately on startup
   runDataCycle().catch(console.error);
 
-  // Then every 60 seconds
+  // Then every 60 seconds during market hours, every 5 min outside
   cron.schedule('* * * * *', () => {
     if (isMarketHours()) {
       runDataCycle().catch(console.error);
     } else {
-      if (cycleCount % 10 === 0) {
-        console.log('[Scheduler] Market closed, skipping cycle');
+      // Outside market hours: run every 5 min to keep data warm for connected clients
+      if (cycleCount % 5 === 0) {
+        runDataCycle().catch(console.error);
+      } else {
+        if (cycleCount % 30 === 0) {
+          console.log('[Scheduler] Market closed, running at reduced frequency');
+        }
       }
     }
   });
 
-  console.log('[Scheduler] Cron job scheduled (every 60s during market hours)');
+  console.log('[Scheduler] Cron job scheduled (every 60s during market hours, every 5min off-hours)');
 }
 
 // Manual trigger for testing
