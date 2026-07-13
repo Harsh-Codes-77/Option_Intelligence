@@ -17,7 +17,7 @@ if (!WS_URL) {
 export function useWebSocket() {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const { setWsConnected, setSymbolState, addAlert, addTimelineEvent, setLastFetchTime, activeSymbol } = useDashboardStore();
+  const { setWsConnected, setSymbolState, updateSymbolTick, addAlert, addTimelineEvent, setLastFetchTime, activeSymbol } = useDashboardStore();
 
   // Initial HTTP fetch for dashboard data
   const fetchDashboard = useCallback(async (symbol: string, retries = 30) => {
@@ -60,6 +60,14 @@ export function useWebSocket() {
           const msg = JSON.parse(event.data);
           if (msg.type === 'ping') {
             ws.send(JSON.stringify({ type: 'pong' }));
+            return;
+          }
+          if (msg.type === 'tick' && msg.data?.symbol) {
+            updateSymbolTick(msg.data.symbol, {
+              ltp: msg.data.ltp,
+              change: msg.data.change,
+              changePct: msg.data.changePct,
+            });
             return;
           }
           if (msg.type === 'update' && msg.data?.symbol && msg.data?.engines) {

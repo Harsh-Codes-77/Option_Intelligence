@@ -9,6 +9,7 @@ import dashboardRoutes from './routes/dashboard.routes';
 import optionChainRoutes from './routes/optionChain.routes';
 import historyRoutes from './routes/history.routes';
 import explainRoutes from './routes/explain.routes';
+import authRoutes from './routes/auth.routes';
 
 const PORT = parseInt(process.env.PORT || '3002', 10);
 
@@ -38,6 +39,7 @@ async function main() {
   app.use('/api', optionChainRoutes);
   app.use('/api', historyRoutes);
   app.use('/api', explainRoutes);
+  app.use('/api', authRoutes);
 
   // Create HTTP server
   const server = http.createServer(app);

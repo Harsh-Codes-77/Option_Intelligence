@@ -93,6 +93,30 @@ const OPTION_CHAIN_URLS: Record<string, string> = {
   MIDCPNIFTY: 'https://www.nseindia.com/api/option-chain-indices?symbol=MIDCPNIFTY',
 };
 
+export function normalizeDate(dateStr: string): string {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  
+  let day = parts[0];
+  let month = parts[1];
+  let year = parts[2];
+  
+  if (day.length === 1) day = '0' + day;
+  
+  if (!isNaN(Number(month))) {
+    const monthNum = parseInt(month, 10);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    if (monthNum >= 1 && monthNum <= 12) {
+      month = months[monthNum - 1];
+    }
+  } else {
+    month = month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
+  }
+  
+  return `${day}-${month}-${year}`;
+}
+
 function defaultOptionSide() {
   return { oi: 0, oiChange: 0, volume: 0, iv: 0, ltp: 0, change: 0, pChange: 0, bid: 0, ask: 0, underlyingValue: 0 };
 }
@@ -132,7 +156,7 @@ export async function fetchOptionChain(symbol: string): Promise<ParsedOptionChai
     return null;
   }
 
-  const expiryDates = raw.records.expiryDates || [];
+  const expiryDates = (raw.records.expiryDates || []).map(normalizeDate);
   const selectedExpiry = expiryDates[0] || '';
   const filteredData = raw.filtered?.data || raw.records?.data || [];
   const firstStrike = filteredData.find((s: any) => s.CE || s.PE);
@@ -140,7 +164,7 @@ export async function fetchOptionChain(symbol: string): Promise<ParsedOptionChai
 
   const strikes: ParsedStrike[] = filteredData.map((s: any) => ({
     strikePrice: s.strikePrice,
-    expiryDate: s.CE?.expiryDate || s.PE?.expiryDate || selectedExpiry,
+    expiryDate: normalizeDate(s.CE?.expiryDate || s.PE?.expiryDate || selectedExpiry),
     CE: parseOptionSide(s.CE),
     PE: parseOptionSide(s.PE),
   }));
@@ -158,3 +182,5 @@ export async function fetchOptionChain(symbol: string): Promise<ParsedOptionChai
     totalPE_Volume: raw.records.PE?.totVol || strikes.reduce((sum, s) => sum + s.PE.volume, 0),
   };
 }
+
+

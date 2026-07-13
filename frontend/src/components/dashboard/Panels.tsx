@@ -153,7 +153,7 @@ export function ScoringCard() {
         {components?.map((c: any) => (
           <div key={c.name}>
             <div className="flex justify-between text-[11px] mb-0.5">
-              <span className="text-[var(--color-text-muted)]">{c.name} ({(c.weight * 100).toFixed(0)}%)</span>
+              <span className="text-[var(--color-text-muted)]">{c.name} ({((c.renormalizedWeight ?? c.weight ?? 0) * 100).toFixed(0)}%)</span>
               <span className={c.normalizedScore >= 60 ? 'text-[var(--color-bullish)]' : c.normalizedScore <= 40 ? 'text-[var(--color-bearish)]' : 'text-[var(--color-neutral)]'}>
                 {c.normalizedScore?.toFixed(1)}
               </span>
@@ -238,7 +238,7 @@ export function VolatilityCard() {
   const vol = state?.engines?.volatility;
   if (!vol?.result) return <EmptyCard title="VOLATILITY" />;
 
-  const { vix, vixClassification, atmIV, ivRank, strategyRecommendation, hv10, termStructure, ivDivergence, expectedMoveValue, expectedMovePct, data_status } = vol.result;
+  const { vix, vixClassification, atmIV, ivRank, strategyRecommendation, hv10, termStructure, ivDivergence, expectedMove: expectedMoveValue, expectedMovePercentage: expectedMovePct, data_status } = vol.result;
 
   return (
     <div className="card cursor-pointer" onClick={() => openFormulaModal(vol.formulaBreakdown)}>

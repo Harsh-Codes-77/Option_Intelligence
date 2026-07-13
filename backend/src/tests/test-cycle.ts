@@ -1,4 +1,4 @@
-import { runDataCycle } from './scheduler/cron';
+import { runDataCycle } from '../scheduler/cron';
 async function test() {
   await runDataCycle();
   console.log("Done");

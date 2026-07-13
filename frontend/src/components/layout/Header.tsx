@@ -1,11 +1,41 @@
+import { useEffect } from 'react';
 import { useDashboardStore } from '../../store/dashboardStore';
 
 const SYMBOLS = ['NIFTY', 'BANKNIFTY', 'FINNIFTY', 'MIDCPNIFTY'];
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 export function Header() {
-  const { activeSymbol, setActiveSymbol, symbols, wsConnected } = useDashboardStore();
+  const { 
+    activeSymbol, 
+    setActiveSymbol, 
+    symbols, 
+    wsConnected,
+    kotakStatus,
+    setKotakStatus,
+    setKotakModalOpen
+  } = useDashboardStore();
+
   const state = symbols[activeSymbol];
   const isPositive = (state?.changePct || 0) >= 0;
+
+  // Poll Kotak status
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/kotak/status`);
+        if (res.ok) {
+          const data = await res.json();
+          setKotakStatus(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch Kotak status:', err);
+      }
+    };
+
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 15000); // Check every 15s
+    return () => clearInterval(interval);
+  }, [setKotakStatus]);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 bg-[var(--color-surface)] border-b border-[var(--color-border)] backdrop-blur-xl">
@@ -64,6 +94,19 @@ export function Header() {
               {state?.marketStatus || 'CLOSED'}
             </span>
           </div>
+
+          {/* Kotak Neo API Status */}
+          <button 
+            onClick={() => setKotakModalOpen(true)}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-bold font-mono transition-all border cursor-pointer ${
+              kotakStatus?.status === 'CONNECTED'
+                ? 'bg-[var(--color-bullish)]/10 border-[var(--color-bullish)]/30 text-[var(--color-bullish)] hover:bg-[var(--color-bullish)]/20'
+                : 'bg-[var(--color-bearish)]/10 border-[var(--color-bearish)]/30 text-[var(--color-bearish)] animate-pulse hover:bg-[var(--color-bearish)]/20'
+            }`}
+          >
+            <span className="text-xs">●</span>
+            <span>KOTAK {kotakStatus?.status === 'CONNECTED' ? 'LIVE' : 'OFFLINE'}</span>
+          </button>
 
           {/* WS Status */}
           <div className={`w-2 h-2 rounded-full ${wsConnected ? 'bg-[var(--color-bullish)]' : 'bg-[var(--color-bearish)]'}`}

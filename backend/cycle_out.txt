@@ -1,0 +1,598 @@
+[Scheduler] Cycle 1 starting...
+[Redis] Connection error: 
+[Redis] Reconnecting in 200ms (attempt 1)
+[Redis] Connection error: 
+[Redis] Reconnecting in 400ms (attempt 2)
+[Redis] Connection error: 
+[Redis] Reconnecting in 600ms (attempt 3)
+[Redis] Connection error: 
+[Redis] Reconnecting in 800ms (attempt 4)
+[Redis] Connection error: 
+[Redis] Reconnecting in 1000ms (attempt 5)
+[Redis] Connection error: 
+[Redis] Reconnecting in 1200ms (attempt 6)
+[Redis] Failed to set key fiiDii_data: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key breadth_data: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Connection error: 
+[Redis] Reconnecting in 1400ms (attempt 7)
+[Redis] Failed to set key sector_data: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key breadth:adLine: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key breadth:advHistory: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:history:BANK: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:rs:BANK: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:history:IT: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:rs:IT: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:history:AUTO: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:rs:AUTO: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:history:PHARMA: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:rs:PHARMA: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:history:METAL: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:rs:METAL: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:history:PSU_BANK: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:rs:PSU_BANK: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:history:ENERGY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:rs:ENERGY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:history:FMCG: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:rs:FMCG: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:history:REALTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:rs:REALTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:history:INFRA: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:rs:INFRA: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:history:FIN_SERVICES: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:rs:FIN_SERVICES: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:history:DEFENCE: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key sector:rs:DEFENCE: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key institutional:fiiHistory: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Connection error: 
+[Redis] Reconnecting in 1600ms (attempt 8)
+[Redis] Failed to set key oi:snapshot:NIFTY:1min: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key pcr:history:NIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key iv:history:NIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key price:history:NIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key futures:NIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key engine:scoring:NIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key engine:regime:NIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key engine:pcr:NIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key engine:maxpain:NIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key live:NIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Connection error: 
+[Redis] Reconnecting in 1800ms (attempt 9)
+[Redis] Connection error: 
+[Redis] Reconnecting in 2000ms (attempt 10)
+[Redis] Failed to set key oi:snapshot:BANKNIFTY:1min: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key pcr:history:BANKNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key iv:history:BANKNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key price:history:BANKNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key futures:BANKNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key engine:scoring:BANKNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key engine:regime:BANKNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key engine:pcr:BANKNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key engine:maxpain:BANKNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key live:BANKNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Connection error: 
+[Redis] Reconnecting in 2200ms (attempt 11)
+[Redis] Failed to set key oi:snapshot:FINNIFTY:1min: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key pcr:history:FINNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key iv:history:FINNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key price:history:FINNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key futures:FINNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key engine:scoring:FINNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key engine:regime:FINNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key engine:pcr:FINNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key engine:maxpain:FINNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key live:FINNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Connection error: 
+[Redis] Reconnecting in 2400ms (attempt 12)
+[Redis] Connection error: 
+[Redis] Reconnecting in 2600ms (attempt 13)
+[Redis] Failed to set key oi:snapshot:MIDCPNIFTY:1min: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key pcr:history:MIDCPNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key iv:history:MIDCPNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key price:history:MIDCPNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key futures:MIDCPNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key engine:scoring:MIDCPNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key engine:regime:MIDCPNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key engine:pcr:MIDCPNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key engine:maxpain:MIDCPNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key live:MIDCPNIFTY: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key engine:sectors: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key engine:breadth: Stream isn't writeable and enableOfflineQueue options is false
+[Redis] Failed to set key engine:institutional: Stream isn't writeable and enableOfflineQueue options is false
+[Scheduler] Cycle 1 completed in 15831ms
+CYCLE COMPLETE
+[Redis] Connection error: 
+[Redis] Reconnecting in 2800ms (attempt 14)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 15)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 16)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 17)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 18)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 19)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 20)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 21)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 22)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 23)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 24)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 25)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 26)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 27)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 28)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 29)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 30)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 31)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 32)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 33)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 34)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 35)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 36)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 37)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 38)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 39)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 40)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 41)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 42)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 43)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 44)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 45)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 46)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 47)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 48)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 49)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 50)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 51)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 52)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 53)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 54)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 55)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 56)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 57)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 58)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 59)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 60)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 61)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 62)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 63)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 64)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 65)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 66)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 67)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 68)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 69)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 70)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 71)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 72)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 73)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 74)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 75)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 76)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 77)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 78)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 79)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 80)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 81)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 82)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 83)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 84)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 85)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 86)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 87)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 88)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 89)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 90)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 91)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 92)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 93)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 94)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 95)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 96)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 97)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 98)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 99)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 100)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 101)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 102)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 103)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 104)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 105)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 106)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 107)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 108)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 109)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 110)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 111)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 112)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 113)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 114)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 115)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 116)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 117)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 118)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 119)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 120)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 121)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 122)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 123)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 124)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 125)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 126)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 127)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 128)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 129)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 130)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 131)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 132)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 133)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 134)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 135)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 136)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 137)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 138)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 139)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 140)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 141)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 142)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 143)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 144)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 145)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 146)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 147)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 148)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 149)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 150)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 151)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 152)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 153)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 154)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 155)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 156)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 157)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 158)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 159)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 160)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 161)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 162)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 163)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 164)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 165)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 166)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 167)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 168)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 169)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 170)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 171)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 172)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 173)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 174)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 175)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 176)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 177)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 178)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 179)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 180)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 181)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 182)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 183)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 184)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 185)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 186)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 187)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 188)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 189)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 190)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 191)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 192)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 193)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 194)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 195)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 196)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 197)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 198)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 199)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 200)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 201)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 202)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 203)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 204)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 205)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 206)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 207)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 208)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 209)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 210)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 211)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 212)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 213)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 214)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 215)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 216)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 217)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 218)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 219)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 220)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 221)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 222)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 223)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 224)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 225)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 226)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 227)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 228)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 229)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 230)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 231)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 232)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 233)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 234)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 235)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 236)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 237)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 238)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 239)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 240)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 241)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 242)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 243)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 244)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 245)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 246)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 247)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 248)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 249)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 250)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 251)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 252)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 253)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 254)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 255)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 256)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 257)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 258)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 259)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 260)
+[Redis] Connection error: 
+[Redis] Reconnecting in 3000ms (attempt 261)

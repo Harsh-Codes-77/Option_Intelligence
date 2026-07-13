@@ -11,6 +11,14 @@ export interface EngineOutput {
   timestamp: number;
 }
 
+export interface KotakStatus {
+  status: 'DISCONNECTED' | 'OTP_REQUIRED' | 'MPIN_REQUIRED' | 'CONNECTED' | 'EXPIRED' | 'ERROR';
+  authenticated: boolean;
+  expiresAt: number;
+  expiresIn: number;
+  lastError: string;
+}
+
 export interface SymbolState {
   spotPrice: number;
   futuresPrice: number;
@@ -51,6 +59,7 @@ interface DashboardStore {
   setActiveSymbol: (s: string) => void;
   symbols: Record<string, SymbolState>;
   setSymbolState: (symbol: string, state: SymbolState) => void;
+  updateSymbolTick: (symbol: string, tick: { ltp: number; change: number; changePct: number }) => void;
   sectors: any[];
   setSectors: (sectors: any[]) => void;
   alerts: AlertEvent[];
@@ -64,6 +73,10 @@ interface DashboardStore {
   closeFormulaModal: () => void;
   lastFetchTime: number;
   setLastFetchTime: (t: number) => void;
+  kotakStatus: KotakStatus | null;
+  setKotakStatus: (status: KotakStatus | null) => void;
+  kotakModalOpen: boolean;
+  setKotakModalOpen: (open: boolean) => void;
 }
 
 export const useDashboardStore = create<DashboardStore>((set) => ({
@@ -73,6 +86,22 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
   setSymbolState: (symbol, state) => set((prev) => ({
     symbols: { ...prev.symbols, [symbol]: state },
   })),
+  updateSymbolTick: (symbol, tick) => set((prev) => {
+    const existing = prev.symbols[symbol];
+    if (!existing) return {};
+    return {
+      symbols: {
+        ...prev.symbols,
+        [symbol]: {
+          ...existing,
+          spotPrice: tick.ltp,
+          change: tick.change,
+          changePct: tick.changePct,
+          lastUpdated: Date.now(),
+        }
+      }
+    };
+  }),
   sectors: [],
   setSectors: (sectors) => set({ sectors }),
   alerts: [],
@@ -93,4 +122,8 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
   closeFormulaModal: () => set({ formulaModal: { open: false, data: null } }),
   lastFetchTime: 0,
   setLastFetchTime: (t) => set({ lastFetchTime: t }),
+  kotakStatus: null,
+  setKotakStatus: (status) => set({ kotakStatus: status }),
+  kotakModalOpen: false,
+  setKotakModalOpen: (open) => set({ kotakModalOpen: open }),
 }));

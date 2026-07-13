@@ -1,11 +1,14 @@
 import * as cron from 'node-cron';
-import { fetchOptionChain } from '../fetchers/optionChain';
-import { fetchIndices } from '../fetchers/indices';
-import { fetchAllSectors } from '../fetchers/sectors';
+import { fetchOptionChainKotak } from '../kotak/fetchers/optionChain.fetcher';
+import { fetchFuturesDataKotak } from '../kotak/fetchers/futures.fetcher';
+import { fetchIndicesKotak } from '../kotak/fetchers/quotes.fetcher';
+import { fetchAllSectorsKotak } from '../kotak/fetchers/sectors.fetcher';
+import { seedHistoricalCandles } from '../kotak/fetchers/historical.fetcher';
+import { safeFetch } from '../kotak/safeFetch';
+import { kotakWebsocket } from '../kotak/websocket.kotak';
 import { fetchFIIDII } from '../fetchers/fiiDii';
 import { fetchBreadthData } from '../fetchers/breadth';
 import { nseFetcher } from '../fetchers/nse.fetcher';
-import { fetchFuturesData } from '../fetchers/futures';
 import { runOptionChainEngine } from '../engines/01_optionChain.engine';
 import { runSupplyDemandEngine } from '../engines/02_supplyDemand.engine';
 import { runPCREngine } from '../engines/03_pcr.engine';
@@ -135,9 +138,16 @@ async function runDataCycle(): Promise<void> {
       }
     }
 
-    // Fetch shared data
-    const indicesData = await fetchIndices();
-    await nseFetcher.rateLimitDelay();
+    // Fetch shared data via Kotak Neo / safeFetch
+    const indicesRes = await safeFetch(() => fetchIndicesKotak(), 'kotak:indices', 'indices', 60);
+    const indicesData = indicesRes.data || {
+      nifty: { lastPrice: 0, open: 0, high: 0, low: 0, previousClose: 0, change: 0, changePct: 0, indexName: 'NIFTY', timestamp: '' },
+      bankNifty: { lastPrice: 0, open: 0, high: 0, low: 0, previousClose: 0, change: 0, changePct: 0, indexName: 'BANKNIFTY', timestamp: '' },
+      finNifty: { lastPrice: 0, open: 0, high: 0, low: 0, previousClose: 0, change: 0, changePct: 0, indexName: 'FINNIFTY', timestamp: '' },
+      vix: 15,
+      marketStatus: 'CLOSED' as const,
+      allIndices: []
+    };
     
     // Fetch FII/DII much less frequently (e.g., every 60 cycles = 1 hr)
     let fiiDiiData: any = await getCache('fiiDii_data');
@@ -155,17 +165,26 @@ async function runDataCycle(): Promise<void> {
       await nseFetcher.rateLimitDelay();
     }
 
-    // Fetch sectors (12 requests) less frequently (e.g., every 5 cycles)
-    let sectorData: any = await getCache('sector_data');
-    if (!sectorData || cycleCount % 5 === 1) {
-      sectorData = await fetchAllSectors();
-      if (sectorData) await setCache('sector_data', sectorData, 300);
+    // Fetch sectors less frequently (e.g., every 5 cycles)
+    let sectorData: any = null;
+    if (cycleCount % 5 === 1) {
+      const sectorRes = await safeFetch(() => fetchAllSectorsKotak(), 'kotak:sectors', 'sectors', 300);
+      sectorData = sectorRes.data;
+    } else {
+      const cached = await getCache<any>('kotak:sectors');
+      sectorData = cached?.data;
+    }
+    if (!sectorData) {
+      sectorData = [];
     }
 
     // Run breadth, sector, and institutional engines (shared across symbols)
     const e6 = await runBreadthEngine(breadthData);
     const e7 = await runSectorRotationEngine(sectorData);
     const e8 = await runInstitutionalEngine(fiiDiiData);
+
+    // Override sectors/breadth data status from the fetch result
+    e7.data_status = sectorData.length > 0 ? 'LIVE' : 'NO_DATA';
 
     appState.setSectors(e7.sectors.map(s => ({
       key: s.key,
@@ -174,14 +193,14 @@ async function runDataCycle(): Promise<void> {
       sectorScore: s.sectorScore, rrgQuadrant: s.rrgQuadrant, breadth: s.sectorBreadth,
     })));
 
-    // Process each symbol
-    for (const symbol of SYMBOLS) {
+    // Process each symbol concurrently
+    await Promise.allSettled(SYMBOLS.map(async (symbol) => {
       try {
-        const optionChainData = await fetchOptionChain(symbol);
-        await nseFetcher.rateLimitDelay();
+        const optionChainRes = await safeFetch(() => fetchOptionChainKotak(symbol), `kotak:optionchain:${symbol}`, 'optionChain', 60);
+        const optionChainData = optionChainRes.data;
 
-        const futuresData = await fetchFuturesData(symbol);
-        await nseFetcher.rateLimitDelay();
+        const futuresRes = await safeFetch(() => fetchFuturesDataKotak(symbol), `kotak:futures:${symbol}`, 'futures', 60);
+        const futuresData = futuresRes.data;
 
         if (!optionChainData) {
           console.warn(`[Scheduler] No data for ${symbol}, skipping processing. Falling back to cache or default state.`);
@@ -205,14 +224,16 @@ async function runDataCycle(): Promise<void> {
               broadcaster.broadcast('update', { symbol, ...emptyState }, symbol);
             }
           }
-          
-          continue;
+          return; // Skip remaining logic for this symbol
         }
 
         await rotateOISnapshots(symbol, optionChainData);
 
         const vix = indicesData.vix;
         const spotPrice = optionChainData.spotPrice;
+
+        // SEED HISTORICAL CANDLES if cache is empty or underpopulated
+        await seedHistoricalCandles(symbol, spotPrice);
 
         // Store previous signals
         const prevState = appState.getSymbolState(symbol);
@@ -226,6 +247,12 @@ async function runDataCycle(): Promise<void> {
         const e1 = await runOptionChainEngine(symbol, optionChainData);
         const e2 = runSupplyDemandEngine(symbol, e1);
         const e3 = await runPCREngine(symbol, optionChainData);
+        
+        // Propagate data status
+        e1.data_status = optionChainRes.data_status;
+        e2.data_status = optionChainRes.data_status;
+        e3.data_status = optionChainRes.data_status;
+
         // Update state
         const indexData = symbol === 'NIFTY' ? indicesData.nifty :
           symbol === 'BANKNIFTY' ? indicesData.bankNifty :
@@ -234,6 +261,11 @@ async function runDataCycle(): Promise<void> {
         const e4 = runMaxPainEngine(symbol, optionChainData);
         const e5 = await runVolatilityEngine(symbol, optionChainData, vix);
         const e9 = await runTechnicalEngine(symbol, spotPrice, futuresData?.volume || 0, indexData);
+        
+        e4.data_status = optionChainRes.data_status;
+        e5.data_status = optionChainRes.data_status;
+        e9.data_status = indicesRes.data_status;
+
         if (futuresData) {
           await setCache(`futures:${symbol}`, {
             futuresPrice: futuresData.futuresPrice,
@@ -243,9 +275,11 @@ async function runDataCycle(): Promise<void> {
         }
         
         const e10 = await runFuturesEngine(symbol, optionChainData);
+        e10.data_status = futuresRes.data_status;
         
         // Phase 6: Run Greeks Engine before Scoring
         const e13 = await runGreeksEngine(symbol, optionChainData);
+        e13.data_status = optionChainRes.data_status;
 
         const e11 = runScoringEngine(symbol, {
           pcr: { data_status: e3.data_status, score: e3.pcrOI, signal: e3.signal },
@@ -261,13 +295,12 @@ async function runDataCycle(): Promise<void> {
             bankLeading: e7.sectors.find(s => s.key === 'BANK')?.rrgQuadrant === 'LEADING'
           },
           breadth: { data_status: e6.data_status, score: e6.breadthScore },
-          volatility: { data_status: e5.data_status, vix, ivRankFalling: e5.ivRank < 50 }, // Approximation for ivRankFalling
+          volatility: { data_status: e5.data_status, vix, ivRankFalling: e5.ivRank < 50 },
           technical: { data_status: e9.data_status, trendScore: e9.trendScore, momentumScore: e9.momentumScore },
           institutional: { data_status: e8.data_status, signal: e8.signal },
           greeks: { data_status: e13.data_status, gammaExposure: e13.gammaExposure, vanna: e13.vanna, signal: e13.signal },
         });
         const e12 = await runRegimeEngine(symbol, spotPrice, e9.ema20, e9.ema50, e9.ema200, vix, e10.volumeRatio);
-
 
         appState.setSymbolState(symbol, {
           spotPrice,
@@ -327,7 +360,7 @@ async function runDataCycle(): Promise<void> {
       } catch (err: any) {
         console.error(`[Scheduler] Error processing ${symbol}:`, err.stack || err.message);
       }
-    }
+    }));
 
     // Cache sectors and breadth
     await setCache('engine:sectors', e7, 120);
@@ -346,6 +379,13 @@ async function runDataCycle(): Promise<void> {
 
 export function startScheduler(): void {
   console.log('[Scheduler] Starting data scheduler...');
+
+  // Try connecting Kotak websocket
+  try {
+    kotakWebsocket.connect();
+  } catch (err: any) {
+    console.error('[Scheduler] Error starting Kotak WebSocket:', err.message);
+  }
 
   // Run immediately on startup
   runDataCycle().catch(console.error);

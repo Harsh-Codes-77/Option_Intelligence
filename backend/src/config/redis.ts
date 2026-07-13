@@ -7,7 +7,7 @@ let lastErrorLog = 0;
 
 export const redis = new Redis(REDIS_URL, {
   maxRetriesPerRequest: 1,
-  enableOfflineQueue: true,
+  enableOfflineQueue: false,
   connectTimeout: 5000,
   retryStrategy(times: number) {
     if (times > 10) {
@@ -70,7 +70,8 @@ export async function getCache<T = any>(key: string): Promise<T | null> {
     const data = await withTimeout(redis.get(key));
     if (!data) return null;
     return JSON.parse(data) as T;
-  } catch {
+  } catch (err: any) {
+    console.warn(`[Redis] Failed to get key ${key}:`, err.message);
     return null;
   }
 }
@@ -81,7 +82,7 @@ export async function setCache(key: string, value: any, ttlSeconds: number = 120
   try {
     await withTimeout(redis.set(key, JSON.stringify(value), 'EX', ttlSeconds));
   } catch (err: any) {
-    // Silently ignore — Redis unavailability is already logged at connection level
+    console.warn(`[Redis] Failed to set key ${key}:`, err.message);
   }
 }
 
@@ -92,7 +93,7 @@ export async function pushToList(key: string, value: any, maxLength: number = 20
     await withTimeout(redis.lpush(key, JSON.stringify(value)));
     await withTimeout(redis.ltrim(key, 0, maxLength - 1));
   } catch (err: any) {
-    // Silently ignore
+    console.warn(`[Redis] Failed to push to list ${key}:`, err.message);
   }
 }
 

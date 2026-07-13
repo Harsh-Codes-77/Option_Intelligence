@@ -25,11 +25,24 @@ export async function fetchFuturesData(symbol: string): Promise<FuturesData | nu
       if (ocData && ocData.records && ocData.records.underlyingValue) {
         spotPrice = ocData.records.underlyingValue;
       }
-    } catch (err) {
-      // fallback to getEquityStockIndices
-      const indexData = await nseFetcher.getEquityStockIndices(symbol);
-      if (indexData && indexData.data && indexData.data.length > 0) {
-        spotPrice = indexData.data[0].lastPrice || (indexData.data[0] as any).last || 0;
+    } catch (err: any) {
+      // fallback to getEquityStockIndices for stocks, or getAllIndices for indices
+      const indexSymbols = ['NIFTY', 'BANKNIFTY', 'FINNIFTY', 'MIDCPNIFTY'];
+      if (indexSymbols.includes(symbol)) {
+        const { fetchIndices } = await import('./indices');
+        const indices = await fetchIndices();
+        const indexMatch = indices.allIndices.find(i => 
+          i.indexName.toUpperCase().includes(symbol) || 
+          (symbol === 'FINNIFTY' && i.indexName.toUpperCase().includes('NIFTY FIN'))
+        );
+        if (indexMatch) {
+          spotPrice = indexMatch.lastPrice;
+        }
+      } else {
+        const indexData = await nseFetcher.getEquityStockIndices(symbol);
+        if (indexData && indexData.data && indexData.data.length > 0) {
+          spotPrice = indexData.data[0].lastPrice || (indexData.data[0] as any).last || 0;
+        }
       }
     }
 

@@ -1,12 +1,13 @@
 import { Header } from './components/layout/Header';
 import { FormulaModal } from './components/shared/FormulaModal';
+import { KotakLoginModal } from './components/shared/KotakLoginModal';
 import { MarketBiasCard, RegimeCard, SupportResistanceCard, ScoringCard, PCRCard, MaxPainCard, VolatilityCard, BreadthCard, FuturesCard, InstitutionalCard, TechnicalCard, SectorHeatmap, TimelinePanel, GreeksCard } from './components/dashboard/Panels';
 import { useWebSocket } from './hooks/useWebSocket';
 import { useDashboardStore } from './store/dashboardStore';
 
 function App() {
   useWebSocket();
-  const { activeSymbol, symbols, lastFetchTime } = useDashboardStore();
+  const { activeSymbol, symbols, lastFetchTime, kotakModalOpen, setKotakModalOpen } = useDashboardStore();
   const state = symbols[activeSymbol];
 
   const freshnessMs = Date.now() - (lastFetchTime || Date.now());
@@ -105,6 +106,9 @@ function App() {
 
       {/* Formula Modal */}
       <FormulaModal />
+
+      {/* Kotak Login Modal */}
+      <KotakLoginModal isOpen={kotakModalOpen} onClose={() => setKotakModalOpen(false)} />
     </div>
   );
 }
